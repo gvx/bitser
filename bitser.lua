@@ -7,12 +7,12 @@ local setmetatable = setmetatable
 
 local ffi = require("ffi")
 
-function Buffer_newWriter(size)
+local function Buffer_newWriter(size)
 	size = size or 4096
 	return {size = size, pos = 0, buf = ffi.new("uint8_t[?]", size)}
 end
 
-function Buffer_newReader(str)
+local function Buffer_newReader(str)
 	local buf = ffi.new("uint8_t[?]", #str)
 	ffi.copy(buf, str, #str)
 	return {size = #str, pos = 0, buf = buf}
@@ -318,7 +318,7 @@ end, register = function(name, resource)
 end, unregister = function(name)
 	resource_name_registry[resource_registry[name]] = nil
 	resource_registry[name] = nil
-end, registerClass = function(name, class, classkey, deserialize)
+end, registerClass = function(name, class, classkey, deserializer)
 	if not class then
 		class = name
 		name = class.__name__ or class.name
@@ -334,26 +334,26 @@ end, registerClass = function(name, class, classkey, deserialize)
 		-- assume hump.class, Slither, or something else that doesn't store the
 		-- class directly on the instance
 	end
-	if not deserialize then
+	if not deserializer then
 		if class.__instanceDict then
 			-- assume MiddleClass
-			deserialize = deserialize_MiddleClass
+			deserializer = deserialize_MiddleClass
 		elseif class.__baseclass then
 			-- assume SECL
-			deserialize = deserialize_SECL
+			deserializer = deserialize_SECL
 		elseif class.__index == class then
 			-- assume hump.class
-			deserialize = deserialize_humpclass
+			deserializer = deserialize_humpclass
 		elseif class.__name__ then
 			-- assume Slither
-			deserialize = deserialize_Slither
+			deserializer = deserialize_Slither
 		else
 			error("no deserializer given for unsupported class library")
 		end
 	end
 	class_registry[name] = class
 	classkey_registry[name] = classkey
-	class_deserialize_registry[name] = deserialize
+	class_deserialize_registry[name] = deserializer
 	class_name_registry[class] = name
 end, unregisterClass = function(name)
 	class_name_registry[class_registry[name]] = nil

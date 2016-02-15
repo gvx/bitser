@@ -17,7 +17,7 @@ install:
   - luarocks install luacov-coveralls
 
 script:
-  - luacheck --std max+busted *.lua spec
+  - luacheck --std max+busted bitser.lua spec
   - busted --verbose --coverage
 
 after_success:
