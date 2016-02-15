@@ -235,7 +235,7 @@ local function deserialize_value(buffer, seen)
 		return v
 	elseif t == 241 then
 		--long resource
-		local idx = reserve_seen()
+		local idx = reserve_seen(seen)
 		local value = resource_registry[deserialize_value(buffer, seen)]
 		seen[idx] = value
 		return value
