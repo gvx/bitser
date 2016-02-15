@@ -84,7 +84,7 @@ describe("bitser", function()
 	end)
 	it("serializes MiddleClass instances", function()
 		local class = require("middleclass")
-		local Horse = class('Horse')
+		local Horse = bitser.registerClass(class('Horse'))
 		function Horse:initialize(name)
 			self.name = name
 		end

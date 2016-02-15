@@ -315,6 +315,7 @@ end, register = function(name, resource)
 	assert(not resource_registry[name], name .. " already registered")
 	resource_registry[name] = resource
 	resource_name_registry[resource] = name
+	return resource
 end, unregister = function(name)
 	resource_name_registry[resource_registry[name]] = nil
 	resource_registry[name] = nil
@@ -355,6 +356,7 @@ end, registerClass = function(name, class, classkey, deserializer)
 	classkey_registry[name] = classkey
 	class_deserialize_registry[name] = deserializer
 	class_name_registry[class] = name
+	return class
 end, unregisterClass = function(name)
 	class_name_registry[class_registry[name]] = nil
 	classkey_registry[name] = nil
