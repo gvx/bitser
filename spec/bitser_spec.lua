@@ -87,9 +87,71 @@ describe("bitser", function()
 		local Horse = bitser.registerClass(class('Horse'))
 		function Horse:initialize(name)
 			self.name = name
+			self[1] = 'instance can be sequence'
 		end
 		local bojack = Horse('Bojack Horseman')
 		test_serdeser(bojack)
 		assert.is_true(serdeser(bojack):isInstanceOf(Horse))
+		bitser.unregisterClass('Horse')
+	end)
+	it("serializes SECL instances", function()
+		local class_mt = {}
+
+		function class_mt:__index(key)
+			return self.__baseclass[key]
+		end
+
+		local class = setmetatable({ __baseclass = {} }, class_mt)
+
+		function class:new(...)
+			local c = {}
+			c.__baseclass = self
+			setmetatable(c, getmetatable(self))
+			if c.init then
+				c:init(...)
+			end
+			return c
+		end
+
+		local Horse = bitser.registerClass('Horse', class:new())
+		function Horse:init(name)
+			self.name = name
+			self[1] = 'instance can be sequence'
+		end
+		local bojack = Horse:new('Bojack Horseman')
+		test_serdeser(bojack)
+		assert.are.equal(serdeser(bojack).__baseclass, Horse)
+		bitser.unregisterClass('Horse')
+	end)
+	it("serializes big data", function()
+		local text = "this is a lot of nonsense, please disregard, we need a lot of data to get past 4 KiB (114 characters should do it)"
+		local t = {}
+		for i = 1, 40 do
+			t[i] = text .. i -- no references allowed!
+		end
+		test_serdeser(t)
+	end)
+	it("serializes many references", function()
+		local max = 1000
+		local t = {}
+		local t2 = {}
+		for i = 1, max do
+			t.t = {}
+			t = t.t
+			t2[i] = t
+		end
+		test_serdeser({t, t2})
+	end)
+	it("serializes resources with long names", function()
+		local temp_resource = {}
+		bitser.register("temp_resource_or_whatever", temp_resource)
+		assert.are.equal(serdeser({this = temp_resource}).this, temp_resource)
+		bitser.unregister("temp_resource_or_whatever")
+	end)
+	it("cannot serialize functions", function()
+		assert.haserror(function() bitser.dumps(function() end), "cannot serialize type function")
+	end)
+	it("cannot serialize unsupported class libraries without explicit deserializer", function()
+		assert.haserror(function() bitser.registerClass('Horse', {mane = 'majestic'}), "no deserializer given for unsupported class library")
 	end)
 end)
