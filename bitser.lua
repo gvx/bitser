@@ -127,7 +127,7 @@ local function write_table(value, buffer, seen)
 	if class then
 		classkey = classkey_registry[class]
 		Buffer_write_byte(buffer, 242)
-		write_string(class)
+		write_string(class, buffer)
 	else
 		Buffer_write_byte(buffer, 240)
 	end
