@@ -1,5 +1,7 @@
 # bitser
 
+[![Build Status](https://travis-ci.org/gvx/bitser.svg?branch=master)](https://travis-ci.org/gvx/bitser)
+
 Serializes and deserializes Lua values with LuaJIT.
 
     local bitser = require 'bitser'

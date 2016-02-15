@@ -15,6 +15,7 @@ install:
   - luarocks install busted
   - luarocks install luacov
   - luarocks install luacov-coveralls
+  - luarocks install middleclass
 
 script:
   - luacheck --std max+busted bitser.lua spec

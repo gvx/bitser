@@ -77,7 +77,7 @@ local class_deserialize_registry = {}
 
 local serialize_value
 
-local function write_number(value, buffer, seen)
+local function write_number(value, buffer, _)
 	if floor(value) == value and value >= -2147483648 and value <= 2147483647 then
 		if value >= -27 and value <= 100 then
 			--small int
@@ -110,11 +110,11 @@ local function write_string(value, buffer, seen)
 	Buffer_write_string(buffer, value)
 end
 
-local function write_nil(value, buffer, seen)
+local function write_nil(_, buffer, _)
 	Buffer_write_byte(buffer, 247)
 end
 
-local function write_boolean(value, buffer, seen)
+local function write_boolean(value, buffer, _)
 	Buffer_write_byte(buffer, value and 249 or 248)
 end
 

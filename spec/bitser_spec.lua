@@ -73,4 +73,23 @@ describe("bitser", function()
 			bitser.unregister(tostring(i))
 		end
 	end)
+	it("serializes deeply nested tables", function()
+		local max = 1000
+		local t = {}
+		for _ = 1, max do
+			t.t = {}
+			t = t.t
+		end
+		test_serdeser(t)
+	end)
+	it("serializes MiddleClass instances", function()
+		local class = require("middleclass")
+		local Horse = class('Horse')
+		function Horse:initialize(name)
+			self.name = name
+		end
+		local bojack = Horse('Bojack Horseman')
+		test_serdeser(bojack)
+		assert.is_true(serdeser(bojack):isInstanceOf(Horse))
+	end)
 end)
