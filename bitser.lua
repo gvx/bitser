@@ -15,7 +15,11 @@ end
 local function Buffer_newReader(str)
 	local buf = ffi.new("uint8_t[?]", #str)
 	ffi.copy(buf, str, #str)
-	return {size = #str, pos = 0, buf = buf}
+	return {pos = 0, buf = buf}
+end
+
+local function Buffer_newDataReader(data)
+	return {pos = 0, buf = ffi.cast("uint8_t*", data)}
 end
 
 local function Buffer_reserve(self, additional_size)
@@ -307,10 +311,12 @@ local function deserialize_Slither(instance, class)
 	return getmetatable(class).allocate(instance)
 end
 
-return {dump = nil, dumps = function(value)
+return {dumps = function(value)
 	return ffi.string(serialize(value))
-end, load = nil, loads = function(value)
-	return deserialize(Buffer_newReader(value))
+end, loadData = function(data)
+	return deserialize(Buffer_newDataReader(data))
+end, loads = function(str)
+	return deserialize(Buffer_newReader(str))
 end, register = function(name, resource)
 	assert(not resource_registry[name], name .. " already registered")
 	resource_registry[name] = resource
