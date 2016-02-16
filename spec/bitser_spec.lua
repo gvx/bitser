@@ -188,6 +188,7 @@ describe("bitser", function()
 		assert.has_error(function() bitser.loads("\255") end, "unsupported serialized type 255")
 	end)
 	it("can load from raw data", function()
+		local ffi = require 'ffi'
 		assert.are.same(bitser.loadData(ffi.new("uint8[4]", 195, 103, 118, 120)), "gvx")
 	end)
 end)
