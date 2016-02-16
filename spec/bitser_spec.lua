@@ -123,6 +123,32 @@ describe("bitser", function()
 		assert.are.equal(serdeser(bojack).__baseclass, Horse)
 		bitser.unregisterClass('Horse')
 	end)
+	it("serializes hump.class instances", function()
+		local class = require("class")
+		local Horse = bitser.registerClass('Horse', class{})
+		function Horse:init(name)
+			self.name = name
+			self[1] = 'instance can be sequence'
+		end
+		local bojack = Horse('Bojack Horseman')
+		test_serdeser(bojack)
+		assert.are.equal(getmetatable(serdeser(bojack)), Horse)
+		bitser.unregisterClass('Horse')
+	end)
+	it("serializes Slither instances", function()
+		local class = require("slither")
+		local Horse = class.private 'Horse' {
+			__attributes__ = {bitser.registerClass},
+			__init__ = function(self, name)
+				self.name = name
+				self[1] = 'instance can be sequence'
+			end
+		}
+		local bojack = Horse('Bojack Horseman')
+		test_serdeser(bojack)
+		assert.is_true(class.isinstance(serdeser(bojack), Horse))
+		bitser.unregisterClass('Horse')
+	end)
 	it("serializes big data", function()
 		local text = "this is a lot of nonsense, please disregard, we need a lot of data to get past 4 KiB (114 characters should do it)"
 		local t = {}
@@ -153,5 +179,12 @@ describe("bitser", function()
 	end)
 	it("cannot serialize unsupported class libraries without explicit deserializer", function()
 		assert.has_error(function() bitser.registerClass('Horse', {mane = 'majestic'}) end, "no deserializer given for unsupported class library")
+	end)
+	it("cannot deserialize values from unassigned type bytes", function()
+		assert.has_error(function() bitser.loads("\251") end, "unsupported serialized type 251")
+		assert.has_error(function() bitser.loads("\252") end, "unsupported serialized type 252")
+		assert.has_error(function() bitser.loads("\253") end, "unsupported serialized type 253")
+		assert.has_error(function() bitser.loads("\254") end, "unsupported serialized type 254")
+		assert.has_error(function() bitser.loads("\255") end, "unsupported serialized type 255")
 	end)
 end)
