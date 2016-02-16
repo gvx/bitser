@@ -17,6 +17,9 @@ Serializes and deserializes Lua values with LuaJIT.
 
 Pull requests, bug reports and other feedback welcome! :heart:
 
+Bitser is released under the ISC license (functionally equivalent to the BSD
+2-Clause and MIT licenses).
+
 ## Why would I use this?
 
 Because it's fast. Because it produces tiny output. Because the name means "snappier"
@@ -43,8 +46,3 @@ send me a pull request!
 
 Yes. At the moment, bitser supports MiddleClass, SECL, hump.class and Slither (and
 probably some other class libraries by accident).
-
-## What license is this under?
-
-None yet. It will be open source (probably MIT license) in the near future, but it
-needs more testing before it's production ready.
