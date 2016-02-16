@@ -10,15 +10,17 @@ Serializes and deserializes Lua values with LuaJIT.
     bitser.register('someResource', someResource)
     bitser.registerClass(SomeClass)
 
-    serializedData = bitser.dumps(someData)
-    someData = bitser.loads(serializedData)
+    serializedString = bitser.dumps(someValue)
+    someValue = bitser.loads(serializedString)
+    serializedData = love.filesystem.newFileData("filename")
+    someValue = bitser.loadData(serializedData:getPointer())
 
 Pull requests, bug reports and other feedback welcome! :heart:
 
 ## Why would I use this?
 
 Because it's fast. Because it produces tiny output. Because the name means "snappier"
-or "unfriendlier" in Dutch. Because it's safe to use with untrusted data.
+or "unfriendlier" in Dutch. Because it's (mostly) safe to use with untrusted data.
 
 Because it's inspired by [binser](https://github.com/bakpakin/binser), which is great.
 
