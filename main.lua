@@ -3,6 +3,7 @@ local found_binser, binser = pcall(require, 'binser')
 local found_ser, ser = pcall(require, 'ser')
 local found_serpent, serpent = pcall(require, 'serpent')
 local found_smallfolk, smallfolk = pcall(require, 'smallfolk')
+local found_msgpack, msgpack = pcall(require, 'MessagePack')
 
 local cases
 local selected_case = 1
@@ -33,6 +34,11 @@ end
 if found_smallfolk then
 	sers.smallfolk = smallfolk.dumps
 	desers.smallfolk = smallfolk.loads
+end
+
+if found_msgpack then
+	sers.msgpack = msgpack.pack
+	desers.msgpack = msgpack.unpack
 end
 
 local view_absolute = true
