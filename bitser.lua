@@ -31,11 +31,11 @@ end
 local function Buffer_newReader(str)
 	local buf = ffi.new("uint8_t[?]", #str)
 	ffi.copy(buf, str, #str)
-	return {pos = 0, buf = buf}
+	return {size = #str, pos = 0, buf = buf}
 end
 
-local function Buffer_newDataReader(data)
-	return {pos = 0, buf = ffi.cast("uint8_t*", data)}
+local function Buffer_newDataReader(data, size)
+	return {size = size, pos = 0, buf = ffi.cast("uint8_t*", data)}
 end
 
 local function Buffer_reserve(self, additional_size)
@@ -69,19 +69,28 @@ local function Buffer_get(self)
 	return self.buf, self.pos
 end
 
+local function Buffer_ensure(self, numbytes)
+	if self.pos + numbytes > self.size then
+		error("malformed serialized data")
+	end
+end
+
 local function Buffer_read_byte(self)
+	Buffer_ensure(self, 1)
 	local x = self.buf[self.pos]
 	self.pos = self.pos + 1
 	return x
 end
 
 local function Buffer_read_string(self, len)
+	Buffer_ensure(self, len)
 	local pos = self.pos
 	self.pos = pos + len
 	return ffi.string(self.buf + pos, len)
 end
 
 local function Buffer_read_data(self, ct, len)
+	Buffer_ensure(self, len)
 	local t = ffi.new(ct)
 	ffi.copy(t, self.buf + self.pos, len)
 	self.pos = self.pos + len

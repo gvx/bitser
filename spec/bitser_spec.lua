@@ -189,6 +189,10 @@ describe("bitser", function()
 	end)
 	it("can load from raw data", function()
 		local ffi = require 'ffi'
-		assert.are.same(bitser.loadData(ffi.new("uint8_t[4]", 195, 103, 118, 120)), "gvx")
+		assert.are.same(bitser.loadData(ffi.new("uint8_t[4]", 195, 103, 118, 120), 4), "gvx")
+	end)
+	it("will not read past the end of the buffer", function()
+		local ffi = require 'ffi'
+		assert.has_error(function() bitser.loadData(ffi.new("uint8_t[4]", 196, 103, 118, 120), 4) end)
 	end)
 end)

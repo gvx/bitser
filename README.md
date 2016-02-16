@@ -13,7 +13,7 @@ Serializes and deserializes Lua values with LuaJIT.
     serializedString = bitser.dumps(someValue)
     someValue = bitser.loads(serializedString)
     serializedData = love.filesystem.newFileData("filename")
-    someValue = bitser.loadData(serializedData:getPointer())
+    someValue = bitser.loadData(serializedData:getPointer(), serializedData:getSize())
 
 Pull requests, bug reports and other feedback welcome! :heart:
 
@@ -23,7 +23,7 @@ Bitser is released under the ISC license (functionally equivalent to the BSD
 ## Why would I use this?
 
 Because it's fast. Because it produces tiny output. Because the name means "snappier"
-or "unfriendlier" in Dutch. Because it's (mostly) safe to use with untrusted data.
+or "unfriendlier" in Dutch. Because it's safe to use with untrusted data.
 
 Because it's inspired by [binser](https://github.com/bakpakin/binser), which is great.
 
