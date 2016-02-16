@@ -338,8 +338,8 @@ end
 
 return {dumps = function(value)
 	return ffi.string(serialize(value))
-end, loadData = function(data)
-	return deserialize(Buffer_newDataReader(data))
+end, loadData = function(data, size)
+	return deserialize(Buffer_newDataReader(data, size))
 end, loads = function(str)
 	return deserialize(Buffer_newReader(str))
 end, register = function(name, resource)
