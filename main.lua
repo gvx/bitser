@@ -114,30 +114,33 @@ function love.draw()
 		for try = 1, tries do
 			for sername, serializer in pairs(sers) do
 				local output
-				local t = os.clock()
-				for i = 1, iters do
-					output = serializer(data)
-				end
-				local diff = os.clock() - t
-				if diff < results_ser[sername] then
+				local success, diff = pcall(function()
+					local t = os.clock()
+					for i = 1, iters do
+						output = serializer(data)
+					end
+					return os.clock() - t
+				end)
+				if success and diff < results_ser[sername] then
 					results_ser[sername] = diff
 				end
 				if try == 1 then
 					outputs[sername] = output
-					love.filesystem.write('output_' .. sername, output)
-					results_size[sername] = #output
+					results_size[sername] = output and #output or math.huge
 				end
 			end
 		end
 		for try = 1, tries do
 			for sername, deserializer in pairs(desers) do
 				local input = outputs[sername]
-				local t = os.clock()
-				for i = 1, iters / 10 do
-					deserializer(input)
-				end
-				local diff = os.clock() - t
-				if diff < results_deser[sername] then
+				local success, diff = pcall(function()
+					local t = os.clock()
+					for i = 1, iters / 10 do
+						deserializer(input)
+					end
+					return os.clock() - t
+				end)
+				if success and diff < results_deser[sername] then
 					results_deser[sername] = diff
 				end
 			end
@@ -150,7 +153,7 @@ function love.draw()
 			if result < results_min then
 				results_min = result
 			end
-			if result > results_max then
+			if result > results_max and result < math.huge then
 				results_max = result
 			end
 		end
@@ -158,7 +161,13 @@ function love.draw()
 		local i = 1
 		for sername, result in pairs(results) do
 			love.graphics.print(sername, 20, i * 20)
-			love.graphics.rectangle('fill', 100, i * 20, (780 - 100) * (result - results_min) / (results_max - results_min), 18)
+			if result == math.huge then
+				love.graphics.setColor(220, 30, 0)
+				love.graphics.rectangle('fill', 100, i * 20, 780 - 100, 18)
+				love.graphics.setColor(40, 30, 0)
+			else
+				love.graphics.rectangle('fill', 100, i * 20, (780 - 100) * (result - results_min) / (results_max - results_min), 18)
+			end
 			i = i + 1
 		end
 		love.graphics.print(results_min, 100, i * 20)
