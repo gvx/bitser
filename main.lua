@@ -106,11 +106,14 @@ function love.draw()
 		resultname = "serialisation time in seconds"
 		results_size = {}
 		results_deser = {}
+		for sername, serializer in pairs(sers) do
+			results_ser[sername] = math.huge
+			results_deser[sername] = math.huge
+		end
 		local outputs = {}
 		for try = 1, tries do
 			for sername, serializer in pairs(sers) do
 				local output
-				results_ser[sername] = math.huge
 				local t = os.clock()
 				for i = 1, iters do
 					output = serializer(data)
@@ -129,7 +132,6 @@ function love.draw()
 		for try = 1, tries do
 			for sername, deserializer in pairs(desers) do
 				local input = outputs[sername]
-				results_deser[sername] = math.huge
 				local t = os.clock()
 				for i = 1, iters / 10 do
 					deserializer(input)
