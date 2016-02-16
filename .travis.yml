@@ -3,7 +3,6 @@ sudo: false
 
 env:
   - LUA="luajit=2.0"
-  - LUA="luajit=2.1"
 
 before_install:
   - pip install hererocks
@@ -24,4 +23,4 @@ script:
   - busted --verbose --coverage
 
 after_success:
-  - luacov-coveralls -e $TRAVIS_BUILD_DIR/lua_install
+  - luacov-coveralls --include bitser -e $TRAVIS_BUILD_DIR/lua_install
