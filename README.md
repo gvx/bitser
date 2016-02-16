@@ -31,8 +31,9 @@ Because it's inspired by [binser](https://github.com/bakpakin/binser), which is 
 
 Download zero or more of [binser.lua](https://github.com/bakpakin/binser/master/binser.lua),
 [ser.lua](https://github.com.com/gvx/Ser/master/ser.lua),
-[smallfolk.lua](https://github.com/gvx/Smallfolk/raw/master/smallfolk.lua) and
-[serpent.lua](https://github.com/pkulchenko/serpent/raw/master/src/serpent.lua), and run:
+[smallfolk.lua](https://github.com/gvx/Smallfolk/raw/master/smallfolk.lua),
+[serpent.lua](https://github.com/pkulchenko/serpent/raw/master/src/serpent.lua) and
+[MessagePack.lua](https://github.com/fperrad/lua-MessagePack/raw/master/src/MessagePack.lua), and run:
 
     love .
 
