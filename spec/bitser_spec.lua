@@ -1,13 +1,4 @@
-local bitser = require 'bitser'
 local ffi = require 'ffi'
-
-local function serdeser(value)
-	return bitser.loads(bitser.dumps(value))
-end
-
-local function test_serdeser(value)
-	assert.are.same(serdeser(value), value)
-end
 
 love = {filesystem = {newFileData = function()
 	return {getPointer = function()
@@ -17,9 +8,19 @@ love = {filesystem = {newFileData = function()
 	end, getSize = function()
 		return #love.s
 	end}
-end, write = function(s)
+end, write = function(fname, s)
 	love.s = s
 end}}
+
+local bitser = require 'bitser'
+
+local function serdeser(value)
+	return bitser.loads(bitser.dumps(value))
+end
+
+local function test_serdeser(value)
+	assert.are.same(serdeser(value), value)
+end
 
 describe("bitser", function()
 	it("serializes simple values", function()
