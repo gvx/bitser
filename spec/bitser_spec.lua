@@ -1,6 +1,6 @@
 local ffi = require 'ffi'
 
-love = {filesystem = {newFileData = function()
+_G.love = {filesystem = {newFileData = function()
 	return {getPointer = function()
 		local buf = ffi.new("uint8_t[?]", #love.s)
 		ffi.copy(buf, love.s, #love.s)
@@ -8,7 +8,7 @@ love = {filesystem = {newFileData = function()
 	end, getSize = function()
 		return #love.s
 	end}
-end, write = function(fname, s)
+end, write = function(_, s)
 	love.s = s
 end}}
 
