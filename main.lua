@@ -20,7 +20,7 @@ end
 if found_bitser_nonreentrant then
 	sers.bitser_nonreentrant = bitser_nonreentrant.dumps
 	desers.bitser_nonreentrant = bitser_nonreentrant.loads
-	bitser_nonreentrant.reserve_buffer(1024 * 1024)
+	bitser_nonreentrant.reserveBuffer(1024 * 1024)
 end
 
 if found_binser then
@@ -123,6 +123,7 @@ function love.draw()
 		end
 		local outputs = {}
 		for try = 1, tries do
+			love.window.setTitle("Running benchmark... [serializing " .. try .. '/' .. tries .. "]")
 			for sername, serializer in pairs(sers) do
 				local output
 				local success, diff = pcall(function()
@@ -142,6 +143,7 @@ function love.draw()
 			end
 		end
 		for try = 1, tries do
+			love.window.setTitle("Running benchmark... [deserializing " .. try .. '/' .. tries .. "]")
 			for sername, deserializer in pairs(desers) do
 				local input = outputs[sername]
 				local success, diff = pcall(function()

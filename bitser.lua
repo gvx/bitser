@@ -35,6 +35,13 @@ local function Buffer_prereserve(min_size)
 	end
 end
 
+local function Buffer_clear()
+	buf_size = -1
+	buf = nil
+	writable_buf = nil
+	writable_buf_size = nil
+end
+
 local function Buffer_makeBuffer(size)
 	if writable_buf then
 		buf = writable_buf
@@ -44,10 +51,6 @@ local function Buffer_makeBuffer(size)
 	end
 	buf_pos = 0
 	Buffer_prereserve(size)
-end
-
-local function Buffer_newWriter(size)
-	Buffer_makeBuffer(size or 0)
 end
 
 local function Buffer_newReader(str)
@@ -88,10 +91,6 @@ local function Buffer_write_data(ct, len, ...)
 	Buffer_reserve(len)
 	ffi.copy(buf + buf_pos, ffi.new(ct, ...), len)
 	buf_pos = buf_pos + len
-end
-
-local function Buffer_get()
-	return buf, buf_pos
 end
 
 local function Buffer_ensure(numbytes)
@@ -244,10 +243,10 @@ serialize_value = function(value, seen)
 end
 
 local function serialize(value)
-	Buffer_newWriter()
+	Buffer_makeBuffer(4096)
 	local seen = {len = 0}
 	serialize_value(value, seen)
-	return Buffer_get()
+	return buf, buf_pos
 end
 
 local function add_to_seen(value, seen)
@@ -357,7 +356,15 @@ local function deserialize_Slither(instance, class)
 end
 
 return {dumps = function(value)
-	return ffi.string(serialize(value))
+	serialize(value)
+	return ffi.string(buf, buf_size)
+end, dumpLoveFile = function(fname, value)
+	serialize(value)
+	love.filesystem.write(fname, ffi.string(buf, buf_size))
+end, loadLoveFile = function(fname)
+	local serializedData = love.filesystem.newFileData(fname)
+	Buffer_newDataReader(serializedData:getPointer(), serializedData:getSize())
+	return deserialize_value({})
 end, loadData = function(data, size)
 	Buffer_newDataReader(data, size)
 	return deserialize_value({})
@@ -415,4 +422,4 @@ end, unregisterClass = function(name)
 	classkey_registry[name] = nil
 	class_deserialize_registry[name] = nil
 	class_registry[name] = nil
-end, reserve_buffer = Buffer_prereserve}
+end, reserveBuffer = Buffer_prereserve, clearBuffer = Buffer_clear}
