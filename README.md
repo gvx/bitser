@@ -29,11 +29,11 @@ Because it's inspired by [binser](https://github.com/bakpakin/binser), which is 
 
 ## How do I use the benchmark thingy?
 
-Download zero or more of [binser.lua](https://github.com/bakpakin/binser/master/binser.lua),
-[ser.lua](https://github.com.com/gvx/Ser/master/ser.lua),
-[smallfolk.lua](https://github.com/gvx/Smallfolk/raw/master/smallfolk.lua),
-[serpent.lua](https://github.com/pkulchenko/serpent/raw/master/src/serpent.lua) and
-[MessagePack.lua](https://github.com/fperrad/lua-MessagePack/raw/master/src/MessagePack.lua), and run:
+Download zero or more of [binser.lua](https://raw.githubusercontent.com/bakpakin/binser/master/binser.lua),
+[ser.lua](https://raw.githubusercontent.com/gvx/Ser/master/ser.lua),
+[smallfolk.lua](https://raw.githubusercontent.com/gvx/Smallfolk/master/smallfolk.lua),
+[serpent.lua](https://raw.githubusercontent.com/pkulchenko/serpent/master/src/serpent.lua) and
+[MessagePack.lua](https://raw.githubusercontent.com/fperrad/lua-MessagePack/master/src/MessagePack.lua), and run:
 
     love .
 
