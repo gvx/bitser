@@ -22,79 +22,104 @@ local getmetatable = getmetatable
 local setmetatable = setmetatable
 
 local ffi = require("ffi")
+local buf_pos = 0
+local buf_size = -1
+local buf = nil
+local writable_buf = nil
+local writable_buf_size = nil
 
-local function Buffer_newWriter(size)
-	size = size or 4096
-	return {size = size, pos = 0, buf = ffi.new("uint8_t[?]", size)}
-end
-
-local function Buffer_newReader(str)
-	local buf = ffi.new("uint8_t[?]", #str)
-	ffi.copy(buf, str, #str)
-	return {size = #str, pos = 0, buf = buf}
-end
-
-local function Buffer_newDataReader(data, size)
-	return {size = size, pos = 0, buf = ffi.cast("uint8_t*", data)}
-end
-
-local function Buffer_reserve(self, additional_size)
-	while self.pos + additional_size > self.size do
-		self.size = self.size * 2
-		local oldbuf = self.buf
-		self.buf = ffi.new("uint8_t[?]", self.size)
-		ffi.copy(self.buf, oldbuf, self.pos)
+local function Buffer_prereserve(min_size)
+	if buf_size < min_size then
+		buf_size = min_size
+		buf = ffi.new("uint8_t[?]", buf_size)
 	end
 end
 
-local function Buffer_write_byte(self, x)
-	Buffer_reserve(self, 1)
-	self.buf[self.pos] = x
-	self.pos = self.pos + 1
+local function Buffer_makeBuffer(size)
+	if writable_buf then
+		buf = writable_buf
+		buf_size = writable_buf_size
+		writable_buf = nil
+		writable_buf_size = nil
+	end
+	buf_pos = 0
+	Buffer_prereserve(size)
 end
 
-local function Buffer_write_string(self, s)
-	Buffer_reserve(self, #s)
-	ffi.copy(self.buf + self.pos, s, #s)
-	self.pos = self.pos + #s
+local function Buffer_newWriter(size)
+	Buffer_makeBuffer(size or 0)
 end
 
-local function Buffer_write_data(self, ct, len, ...)
-	Buffer_reserve(self, len)
-	ffi.copy(self.buf + self.pos, ffi.new(ct, ...), len)
-	self.pos = self.pos + len
+local function Buffer_newReader(str)
+	Buffer_makeBuffer(#str)
+	ffi.copy(buf, str, #str)
 end
 
-local function Buffer_get(self)
-	return self.buf, self.pos
+local function Buffer_newDataReader(data, size)
+	writable_buf = buf
+	writable_buf_size = buf_size
+	buf_pos = 0
+	buf_size = size
+	buf = ffi.cast("uint8_t*", data)
 end
 
-local function Buffer_ensure(self, numbytes)
-	if self.pos + numbytes > self.size then
+local function Buffer_reserve(additional_size)
+	while buf_pos + additional_size > buf_size do
+		buf_size = buf_size * 2
+		local oldbuf = buf
+		buf = ffi.new("uint8_t[?]", buf_size)
+		ffi.copy(buf, oldbuf, buf_pos)
+	end
+end
+
+local function Buffer_write_byte(x)
+	Buffer_reserve(1)
+	buf[buf_pos] = x
+	buf_pos = buf_pos + 1
+end
+
+local function Buffer_write_string(s)
+	Buffer_reserve(#s)
+	ffi.copy(buf + buf_pos, s, #s)
+	buf_pos = buf_pos + #s
+end
+
+local function Buffer_write_data(ct, len, ...)
+	Buffer_reserve(len)
+	ffi.copy(buf + buf_pos, ffi.new(ct, ...), len)
+	buf_pos = buf_pos + len
+end
+
+local function Buffer_get()
+	return buf, buf_pos
+end
+
+local function Buffer_ensure(numbytes)
+	if buf_pos + numbytes > buf_size then
 		error("malformed serialized data")
 	end
 end
 
-local function Buffer_read_byte(self)
-	Buffer_ensure(self, 1)
-	local x = self.buf[self.pos]
-	self.pos = self.pos + 1
+local function Buffer_read_byte()
+	Buffer_ensure(1)
+	local x = buf[buf_pos]
+	buf_pos = buf_pos + 1
 	return x
 end
 
-local function Buffer_read_string(self, len)
-	Buffer_ensure(self, len)
-	local pos = self.pos
-	self.pos = pos + len
-	return ffi.string(self.buf + pos, len)
+local function Buffer_read_string(len)
+	Buffer_ensure(len)
+	local x = ffi.string(buf + buf_pos, len)
+	buf_pos = buf_pos + len
+	return x
 end
 
-local function Buffer_read_data(self, ct, len)
-	Buffer_ensure(self, len)
-	local t = ffi.new(ct)
-	ffi.copy(t, self.buf + self.pos, len)
-	self.pos = self.pos + len
-	return t
+local function Buffer_read_data(ct, len)
+	Buffer_ensure(len)
+	local x = ffi.new(ct)
+	ffi.copy(x, buf + buf_pos, len)
+	buf_pos = buf_pos + len
+	return x
 end
 
 local resource_registry = {}
@@ -106,48 +131,48 @@ local class_deserialize_registry = {}
 
 local serialize_value
 
-local function write_number(value, buffer, _)
+local function write_number(value, _)
 	if floor(value) == value and value >= -2147483648 and value <= 2147483647 then
 		if value >= -27 and value <= 100 then
 			--small int
-			Buffer_write_byte(buffer, value + 27)
+			Buffer_write_byte(value + 27)
 		elseif value >= -32768 and value <= 32767 then
 			--short int
-			Buffer_write_byte(buffer, 250)
-			Buffer_write_data(buffer, "int16_t[1]", 2, value)
+			Buffer_write_byte(250)
+			Buffer_write_data("int16_t[1]", 2, value)
 		else
 			--long int
-			Buffer_write_byte(buffer, 245)
-			Buffer_write_data(buffer, "int32_t[1]", 4, value)
+			Buffer_write_byte(245)
+			Buffer_write_data("int32_t[1]", 4, value)
 		end
 	else
 		--double
-		Buffer_write_byte(buffer, 246)
-		Buffer_write_data(buffer, "double[1]", 8, value)
+		Buffer_write_byte(246)
+		Buffer_write_data("double[1]", 8, value)
 	end
 end
 
-local function write_string(value, buffer, seen)
+local function write_string(value, seen)
 	if #value < 32 then
 		--short string
-		Buffer_write_byte(buffer, 192 + #value)
+		Buffer_write_byte(192 + #value)
 	else
 		--long string
-		Buffer_write_byte(buffer, 244)
-		write_number(#value, buffer, seen)
+		Buffer_write_byte(244)
+		write_number(#value, seen)
 	end
-	Buffer_write_string(buffer, value)
+	Buffer_write_string(value)
 end
 
-local function write_nil(_, buffer, _)
-	Buffer_write_byte(buffer, 247)
+local function write_nil(_, _)
+	Buffer_write_byte(247)
 end
 
-local function write_boolean(value, buffer, _)
-	Buffer_write_byte(buffer, value and 249 or 248)
+local function write_boolean(value, _)
+	Buffer_write_byte(value and 249 or 248)
 end
 
-local function write_table(value, buffer, seen)
+local function write_table(value, seen)
 	local classkey
 	local class = (class_name_registry[value.class] -- MiddleClass
 		or class_name_registry[value.__baseclass] -- SECL
@@ -155,15 +180,15 @@ local function write_table(value, buffer, seen)
 		or class_name_registry[value.__class__]) -- Slither
 	if class then
 		classkey = classkey_registry[class]
-		Buffer_write_byte(buffer, 242)
-		write_string(class, buffer)
+		Buffer_write_byte(242)
+		write_string(class)
 	else
-		Buffer_write_byte(buffer, 240)
+		Buffer_write_byte(240)
 	end
 	local len = #value
-	write_number(len, buffer, seen)
+	write_number(len, seen)
 	for i = 1, len do
-		serialize_value(value[i], buffer, seen)
+		serialize_value(value[i], seen)
 	end
 	local klen = 0
 	for k in pairs(value) do
@@ -171,27 +196,27 @@ local function write_table(value, buffer, seen)
 			klen = klen + 1
 		end
 	end
-	write_number(klen, buffer, seen)
+	write_number(klen, seen)
 	for k, v in pairs(value) do
 		if (type(k) ~= 'number' or floor(k) ~= k or k > len or k < 1) and k ~= classkey then
-			serialize_value(k, buffer, seen)
-			serialize_value(v, buffer, seen)
+			serialize_value(k, seen)
+			serialize_value(v, seen)
 		end
 	end
 end
 
 local types = {number = write_number, string = write_string, table = write_table, boolean = write_boolean, ["nil"] = write_nil}
 
-serialize_value = function(value, buffer, seen)
+serialize_value = function(value, seen)
 	if seen[value] then
 		local ref = seen[value]
 		if ref < 64 then
 			--small reference
-			Buffer_write_byte(buffer, 128 + ref)
+			Buffer_write_byte(128 + ref)
 		else
 			--long reference
-			Buffer_write_byte(buffer, 243)
-			write_number(ref, buffer, seen)
+			Buffer_write_byte(243)
+			write_number(ref, seen)
 		end
 		return
 	end
@@ -204,25 +229,25 @@ serialize_value = function(value, buffer, seen)
 		local name = resource_name_registry[value]
 		if #name < 16 then
 			--small resource
-			Buffer_write_byte(buffer, 224 + #name)
-			Buffer_write_string(buffer, name)
+			Buffer_write_byte(224 + #name)
+			Buffer_write_string(name)
 		else
 			--long resource
-			Buffer_write_byte(buffer, 241)
-			write_string(name, buffer, seen)
+			Buffer_write_byte(241)
+			write_string(name, seen)
 		end
 		return
 	end
 	(types[t] or
 		error("cannot serialize type " .. t)
-		)(value, buffer, seen)
+		)(value, seen)
 end
 
 local function serialize(value)
-	local buffer = Buffer_newWriter()
+	Buffer_newWriter()
 	local seen = {len = 0}
-	serialize_value(value, buffer, seen)
-	return Buffer_get(buffer)
+	serialize_value(value, seen)
+	return Buffer_get()
 end
 
 local function add_to_seen(value, seen)
@@ -235,8 +260,8 @@ local function reserve_seen(seen)
 	return #seen
 end
 
-local function deserialize_value(buffer, seen)
-	local t = Buffer_read_byte(buffer)
+local function deserialize_value(seen)
+	local t = Buffer_read_byte()
 	if t < 128 then
 		--small int
 		return t - 27
@@ -245,44 +270,44 @@ local function deserialize_value(buffer, seen)
 		return seen[t - 127]
 	elseif t < 224 then
 		--small string
-		return add_to_seen(Buffer_read_string(buffer, t - 192), seen)
+		return add_to_seen(Buffer_read_string(t - 192), seen)
 	elseif t < 240 then
 		--small resource
-		return add_to_seen(resource_registry[Buffer_read_string(buffer, t - 224)], seen)
+		return add_to_seen(resource_registry[Buffer_read_string(t - 224)], seen)
 	elseif t == 240 then
 		--table
 		local v = add_to_seen({}, seen)
-		local len = deserialize_value(buffer, seen)
+		local len = deserialize_value(seen)
 		for i = 1, len do
-			v[i] = deserialize_value(buffer, seen)
+			v[i] = deserialize_value(seen)
 		end
-		len = deserialize_value(buffer, seen)
+		len = deserialize_value(seen)
 		for _ = 1, len do
-			local key = deserialize_value(buffer, seen)
-			v[key] = deserialize_value(buffer, seen)
+			local key = deserialize_value(seen)
+			v[key] = deserialize_value(seen)
 		end
 		return v
 	elseif t == 241 then
 		--long resource
 		local idx = reserve_seen(seen)
-		local value = resource_registry[deserialize_value(buffer, seen)]
+		local value = resource_registry[deserialize_value(seen)]
 		seen[idx] = value
 		return value
 	elseif t == 242 then
 		--instance
 		local instance = add_to_seen({}, seen)
-		local classname = deserialize_value(buffer, seen)
+		local classname = deserialize_value(seen)
 		local class = class_registry[classname]
 		local classkey = classkey_registry[classname]
 		local deserializer = class_deserialize_registry[classname]
-		local len = deserialize_value(buffer, seen)
+		local len = deserialize_value(seen)
 		for i = 1, len do
-			instance[i] = deserialize_value(buffer, seen)
+			instance[i] = deserialize_value(seen)
 		end
-		len = deserialize_value(buffer, seen)
+		len = deserialize_value(seen)
 		for _ = 1, len do
-			local key = deserialize_value(buffer, seen)
-			instance[key] = deserialize_value(buffer, seen)
+			local key = deserialize_value(seen)
+			instance[key] = deserialize_value(seen)
 		end
 		if classkey then
 			instance[classkey] = class
@@ -290,16 +315,16 @@ local function deserialize_value(buffer, seen)
 		return deserializer(instance, class)
 	elseif t == 243 then
 		--reference
-		return seen[deserialize_value(buffer, seen) + 1]
+		return seen[deserialize_value(seen) + 1]
 	elseif t == 244 then
 		--long string
-		return add_to_seen(Buffer_read_string(buffer, deserialize_value(buffer, seen)), seen)
+		return add_to_seen(Buffer_read_string(deserialize_value(seen)), seen)
 	elseif t == 245 then
 		--long int
-		return Buffer_read_data(buffer, "int32_t[1]", 4)[0]
+		return Buffer_read_data("int32_t[1]", 4)[0]
 	elseif t == 246 then
 		--double
-		return Buffer_read_data(buffer, "double[1]", 8)[0]
+		return Buffer_read_data("double[1]", 8)[0]
 	elseif t == 247 then
 		--nil
 		return nil
@@ -311,15 +336,10 @@ local function deserialize_value(buffer, seen)
 		return true
 	elseif t == 250 then
 		--short int
-		return Buffer_read_data(buffer, "int16_t[1]", 2)[0]
+		return Buffer_read_data("int16_t[1]", 2)[0]
 	else
 		error("unsupported serialized type " .. t)
 	end
-end
-
-local function deserialize(buffer)
-	local seen = {}
-	return deserialize_value(buffer, seen)
 end
 
 local function deserialize_MiddleClass(instance, class)
@@ -339,9 +359,11 @@ end
 return {dumps = function(value)
 	return ffi.string(serialize(value))
 end, loadData = function(data, size)
-	return deserialize(Buffer_newDataReader(data, size))
+	Buffer_newDataReader(data, size)
+	return deserialize_value({})
 end, loads = function(str)
-	return deserialize(Buffer_newReader(str))
+	Buffer_newReader(str)
+	return deserialize_value({})
 end, register = function(name, resource)
 	assert(not resource_registry[name], name .. " already registered")
 	resource_registry[name] = resource
@@ -393,4 +415,4 @@ end, unregisterClass = function(name)
 	classkey_registry[name] = nil
 	class_deserialize_registry[name] = nil
 	class_registry[name] = nil
-end}
+end, reserve_buffer = Buffer_prereserve}
