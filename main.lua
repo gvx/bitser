@@ -1,4 +1,5 @@
 local found_bitser, bitser = pcall(require, 'bitser')
+local found_bitser_nonreentrant, bitser_nonreentrant = pcall(require, 'bitser_nonreentrant')
 local found_binser, binser = pcall(require, 'binser')
 local found_ser, ser = pcall(require, 'ser')
 local found_serpent, serpent = pcall(require, 'serpent')
@@ -14,6 +15,12 @@ local desers = {}
 if found_bitser then
 	sers.bitser = bitser.dumps
 	desers.bitser = bitser.loads
+end
+
+if found_bitser_nonreentrant then
+	sers.bitser_nonreentrant = bitser_nonreentrant.dumps
+	desers.bitser_nonreentrant = bitser_nonreentrant.loads
+	bitser_nonreentrant.reserve_buffer(1024 * 1024)
 end
 
 if found_binser then
@@ -49,6 +56,7 @@ function love.load()
 	state = 'select_case'
 	love.graphics.setBackgroundColor(255, 230, 220)
 	love.graphics.setColor(40, 30, 0)
+	love.window.setTitle("Select a benchmark testcase")
 end
 
 function love.keypressed(key)
@@ -59,6 +67,7 @@ function love.keypressed(key)
 			selected_case = selected_case % #cases + 1
 		elseif key == 'return' then
 			state = 'calculate_results'
+			love.window.setTitle("Running benchmark...")
 		end
 	elseif state == 'results' then
 		if key == 'r' then
@@ -87,6 +96,7 @@ function love.keypressed(key)
 			end
 		elseif key == 'escape' then
 			state = 'select_case'
+			love.window.setTitle("Select a benchmark testcase")
 		end
 	end
 end
@@ -98,6 +108,7 @@ function love.draw()
 		end
 	elseif state == 'calculate_results' then
 		love.graphics.print("Running benchmark...", 20, 20)
+		love.graphics.print("This may take a while", 20, 40)
 		state = 'calculate_results_2'
 	elseif state == 'calculate_results_2' then
 		local data, iters, tries = love.filesystem.load("cases/" .. cases[selected_case])()
@@ -146,6 +157,7 @@ function love.draw()
 			end
 		end
 		state = 'results'
+		love.window.setTitle("Results for " .. cases[selected_case])
 	elseif state == 'results' then
 		local results_min = math.huge
 		local results_max = -math.huge
