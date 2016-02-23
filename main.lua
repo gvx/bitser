@@ -1,5 +1,4 @@
 local found_bitser, bitser = pcall(require, 'bitser')
-local found_bitser_nonreentrant, bitser_nonreentrant = pcall(require, 'bitser_nonreentrant')
 local found_binser, binser = pcall(require, 'binser')
 local found_ser, ser = pcall(require, 'ser')
 local found_serpent, serpent = pcall(require, 'serpent')
@@ -15,12 +14,7 @@ local desers = {}
 if found_bitser then
 	sers.bitser = bitser.dumps
 	desers.bitser = bitser.loads
-end
-
-if found_bitser_nonreentrant then
-	sers.bitser_nonreentrant = bitser_nonreentrant.dumps
-	desers.bitser_nonreentrant = bitser_nonreentrant.loads
-	bitser_nonreentrant.reserveBuffer(1024 * 1024)
+	bitser.reserveBuffer(1024 * 1024)
 end
 
 if found_binser then
@@ -123,7 +117,6 @@ function love.draw()
 		end
 		local outputs = {}
 		for try = 1, tries do
-			love.window.setTitle("Running benchmark... [serializing " .. try .. '/' .. tries .. "]")
 			for sername, serializer in pairs(sers) do
 				local output
 				local success, diff = pcall(function()
@@ -143,7 +136,6 @@ function love.draw()
 			end
 		end
 		for try = 1, tries do
-			love.window.setTitle("Running benchmark... [deserializing " .. try .. '/' .. tries .. "]")
 			for sername, deserializer in pairs(desers) do
 				local input = outputs[sername]
 				local success, diff = pcall(function()

@@ -1,4 +1,5 @@
 local bitser = require 'bitser'
+local ffi = require 'ffi'
 
 local function serdeser(value)
 	return bitser.loads(bitser.dumps(value))
@@ -7,6 +8,18 @@ end
 local function test_serdeser(value)
 	assert.are.same(serdeser(value), value)
 end
+
+love = {filesystem = {newFileData = function()
+	return {getPointer = function()
+		local buf = ffi.new("uint8_t[?]", #love.s)
+		ffi.copy(buf, love.s, #love.s)
+		return buf
+	end, getSize = function()
+		return #love.s
+	end}
+end, write = function(s)
+	love.s = s
+end}}
 
 describe("bitser", function()
 	it("serializes simple values", function()
@@ -188,11 +201,21 @@ describe("bitser", function()
 		assert.has_error(function() bitser.loads("\255") end, "unsupported serialized type 255")
 	end)
 	it("can load from raw data", function()
-		local ffi = require 'ffi'
 		assert.are.same(bitser.loadData(ffi.new("uint8_t[4]", 195, 103, 118, 120), 4), "gvx")
 	end)
 	it("will not read past the end of the buffer", function()
-		local ffi = require 'ffi'
 		assert.has_error(function() bitser.loadData(ffi.new("uint8_t[4]", 196, 103, 118, 120), 4) end)
+	end)
+	it("can clear the buffer", function()
+		bitser.clearBuffer()
+	end)
+	it("can write after reading from read-only buffer", function()
+		bitser.loadData(ffi.new("uint8_t[4]", 195, 103, 118, 120), 4)
+		test_serdeser("bitser")
+	end)
+	it("it can dump and load LÖVE files", function()
+		local v = {value = "value"}
+		bitser.dumpLoveFile("some_file_name", v)
+		assert.are.same(v, bitser.loadLoveFile("some_file_name"))
 	end)
 end)
