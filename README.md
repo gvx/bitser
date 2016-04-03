@@ -5,15 +5,17 @@
 
 Serializes and deserializes Lua values with LuaJIT.
 
-    local bitser = require 'bitser'
+```lua
+local bitser = require 'bitser'
 
-    bitser.register('someResource', someResource)
-    bitser.registerClass(SomeClass)
+bitser.register('someResource', someResource)
+bitser.registerClass(SomeClass)
 
-    serializedString = bitser.dumps(someValue)
-    someValue = bitser.loads(serializedString)
-    serializedData = love.filesystem.newFileData("filename")
-    someValue = bitser.loadData(serializedData:getPointer(), serializedData:getSize())
+serializedString = bitser.dumps(someValue)
+someValue = bitser.loads(serializedString)
+serializedData = love.filesystem.newFileData("filename")
+someValue = bitser.loadData(serializedData:getPointer(), serializedData:getSize())
+```
 
 Pull requests, bug reports and other feedback welcome! :heart:
 
