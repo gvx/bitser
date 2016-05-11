@@ -163,6 +163,37 @@ describe("bitser", function()
 		assert.is_true(class.isinstance(serdeser(bojack), Horse))
 		bitser.unregisterClass('Horse')
 	end)
+	it("serializes custom class instances", function()
+		local Horse_mt = bitser.registerClass('Horse', {__index = {}}, nil, setmetatable)
+		local function Horse(name)
+			local self = {}
+			self.name = name
+			self[1] = 'instance can be sequence'
+			return setmetatable(self, Horse_mt)
+		end
+		local bojack = Horse('Bojack Horseman')
+		test_serdeser(bojack)
+		assert.are.equal(getmetatable(serdeser(bojack)), Horse_mt)
+		bitser.unregisterClass('Horse')
+	end)
+	it("serializes classes that repeat keys", function()
+		local my_mt  = {"hi"}
+		local works  = { foo = 'a', bar = {baz = 'b'}, }
+		local broken = { foo = 'a', bar = {foo = 'b'}, }
+		local more_broken = {
+			foo = 'a',
+			baz = {foo = 'b', bar = 'c'},
+			quz = {bar = 'd', bam = 'e'}
+		}
+		setmetatable(works,  my_mt)
+		setmetatable(broken, my_mt)
+		setmetatable(more_broken, my_mt)
+		bitser.registerClass("Horse", my_mt, nil, setmetatable)
+		test_serdeser(works)
+		test_serdeser(broken)
+		test_serdeser(more_broken)
+		bitser.unregisterClass('Horse')
+	end)
 	it("serializes big data", function()
 		local text = "this is a lot of nonsense, please disregard, we need a lot of data to get past 4 KiB (114 characters should do it)"
 		local t = {}
