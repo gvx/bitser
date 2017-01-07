@@ -1,3 +1,4 @@
+--- Serialize ---
 bitser = require "bitser"
 
 class A
@@ -22,6 +23,8 @@ file = io.open 'output.txt', 'w'
 file\write bitser.dumps instance
 file\close!
 
+
+--- Clean Up ---
 file = nil
 instance = nil
 bitser = nil
@@ -29,7 +32,7 @@ package.loaded.bitser = nil
 collectgarbage!
 
 
-
+--- Deserialize ---
 bitser = require "bitser"
 
 file = io.open 'output.txt', 'r'

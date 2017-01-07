@@ -177,7 +177,7 @@ local function write_table(value, seen)
 		or class_name_registry[value.__baseclass] -- SECL
 		or class_name_registry[getmetatable(value)] -- hump.class
 		or class_name_registry[value.__class__]) -- Slither
-		or class_name_registry[value.__class]
+		or class_name_registry[value.__class] -- Moonscript class
 	if classname then
 		classkey = classkey_registry[classname]
 		Buffer_write_byte(242)
