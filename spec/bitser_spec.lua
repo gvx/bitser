@@ -197,7 +197,7 @@ describe("bitser", function()
 		end
 		local instance = TestClass(19)
 		test_serdeser(instance)
-		assert.is_true(serdeser(instance).__class == TestClass)
+		assert.are.equal(serdeser(instance).__class, TestClass)
 		bitser.unregisterClass('TestClass')
 	end)
 	it("serializes custom class instances", function()
