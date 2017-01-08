@@ -13,8 +13,6 @@ bitser.registerClass(SomeClass)
 
 serializedString = bitser.dumps(someValue)
 someValue = bitser.loads(serializedString)
-serializedData = love.filesystem.newFileData("filename")
-someValue = bitser.loadData(serializedData:getPointer(), serializedData:getSize())
 ```
 
 Documentation can be found in [USAGE.md](USAGE.md).
