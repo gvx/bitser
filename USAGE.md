@@ -2,6 +2,17 @@
 * [Serializing class instances](#serializing-class-instances)
 * [Advanced usage](#advanced-usage)
 * [Reference](#reference)
+    * [`bitser.dumps`](#dumps)
+    * [`bitser.dumpLoveFile`](#dumplovefile)
+    * [`bitser.loads`](#loads)
+    * [`bitser.loadData`](#loaddata)
+    * [`bitser.loadLoveFile`](#loadlovefile)
+    * [`bitser.register`](#register)
+    * [`bitser.registerClass`](#registerclass)
+    * [`bitser.unregister`](#unregister)
+    * [`bitser.unregisterClass`](#unregisterclass)
+    * [`bitser.reserveBuffer`](#reservebuffer)
+    * [`bitser.clearBuffer`](#clearbuffer)
 
 # Basic usage
 
@@ -20,7 +31,35 @@ contains one of those. If you need to, look into [`bitser.register`](#register).
 
 # Serializing class instances
 
-(I need to finish this section.)
+All you need to make bitser correctly serialize your class instances is register that class:
+
+```lua
+-- this is usually enough
+bitser.registerClass(MyClass)
+
+-- if you use Slither, you can add it to __attributes__
+class 'MyClass' {
+			__attributes__ = {bitser.registerClass},
+			-- insert rest of class here
+}
+
+local data = bitser.dumps(MyClass(42))
+local instance = bitser.loads(data)
+```
+
+Note that classnames need to be unique to avoid confusion, so if you have two different classes named `Foo` you'll need to do
+something like:
+
+```lua
+-- in module_a.lua
+bitser.registerClass('module_a.Foo', Foo)
+
+-- in module_b.lua
+bitser.registerClass('module_b.Foo', Foo)
+```
+
+See the reference sections on [`bitser.registerClass`](#registerclass) and
+[`bitser.unregisterClass`](#unregisterclass) for more information.
 
 ## Supported class libraries
 
@@ -32,14 +71,29 @@ contains one of those. If you need to, look into [`bitser.register`](#register).
 
 # Advanced usage
 
-(I need to finish this section.)
+If you use [LÖVE](https://love2d.org/), you'll want to use [`bitser.dumpLoveFile`](#dumplovefile) and [`bitser.loadLoveFile`](#loadlovefile) if you want to serialize to the save directory. You also might have images and other resources that you'll need to register, like follows:
+
+```lua
+function love.load()
+  bad_guy_img = bitser.register('bad_guy_img', love.graphics.newImage('img/bad_guy.png'))
+  if love.filesystem.exists('save_point.dat') then
+    level_data = bitser.loadLoveFile('save_point.dat')
+  else
+    level_data = create_level_data()
+  end
+end
+
+function save_point_reached()
+  bitser.dumpLoveFile('save_point.dat', level_data)
+end
+```
 
 # Reference
 
 ## dumps
 
 ```lua
-local string = bitser.dumps(value)
+string = bitser.dumps(value)
 ```
 
 Basic serialization of `value` into a Lua string.
@@ -60,7 +114,7 @@ See also: [`bitser.loadLoveFile`](#loadlovefile).
 ## loads
 
 ```lua
-local value = bitser.loads(string)
+value = bitser.loads(string)
 ```
 
 Deserializes `value` from `string`.
@@ -70,7 +124,7 @@ See also: [`bitser.dumps`](#dumps).
 ## loadData
 
 ```lua
-local value = bitser.loadData(light_userdata, size)
+value = bitser.loadData(light_userdata, size)
 ```
 
 Deserializes `value` from raw data. You probably won't need to use this function ever.
@@ -78,7 +132,7 @@ Deserializes `value` from raw data. You probably won't need to use this function
 ## loadLoveFile
 
 ```lua
-local value = bitser.loadLoveFile(file_name)
+value = bitser.loadLoveFile(file_name)
 ```
 
 Reads from `file_name` and deserializes `value` more efficiently than reading the file and then deserializing that string.
@@ -89,21 +143,23 @@ See also: [`bitser.dumpLoveFile`](#dumplovefile).
 ## register
 
 ```lua
-bitser.register(name, resource)
+resource = bitser.register(name, resource)
 ```
 
 Registers the value `resource` with the name `name`, which has to be a unique string. Registering static resources like images,
 functions, classes and huge strings, makes sure bitser doesn't attempt to serialize them, but only stores a named
 reference to them.
 
+Returns the registered resource as a convenience.
+
 See also: [`bitser.unregister`](#unregister).
 
 ## registerClass
 
 ```lua
-bitser.registerClass(class)
-bitser.registerClass(name, class)
-bitser.registerClass(name, class, classkey, deserializer)
+class = bitser.registerClass(class)
+class = bitser.registerClass(name, class)
+class = bitser.registerClass(name, class, classkey, deserializer)
 ```
 
 Registers the class `class`, so that bitser can correctly serialize and deserialize instances of `class`.
@@ -117,13 +173,15 @@ Class names also have to be unique, so if you use multiple classes with the same
 variant as well to give them different names.
 
 The arguments `classkey` and `deserializer` exist so you can hook in unsupported class libraries without needing
-to patch bitser. [See the list of supported class libraries](#supported-class-libraries)
+to patch bitser. [See the list of supported class libraries](#supported-class-libraries).
 
 If not nil, the argument `classkey` should be a string such that
 `rawget(obj, classkey) == class` for any `obj` whose type is `class`. This is done so that key is skipped for serialization.
 
 If not nil, the argument `deserializer` should be a function such that `deserializer(obj, class)` returns a valid
 instance of `class` with the properties of `obj`. `deserializer` is allowed to mutate `obj`.
+
+Returns the registered resource as a convenience.
 
 See also: [`bitser.unregisterClass`](#unregisterclass).
 
