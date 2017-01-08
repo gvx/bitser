@@ -175,8 +175,7 @@ describe("bitser", function()
 					self[1] = 'instance can be sequence'
 				end,
 				__base = _base_0,
-				__name = "Horse"
-			}, {
+				__name = "Horse"}, {
 				__index = _base_0,
 				__call = function(cls, ...)
 						local _self_0 = setmetatable({}, _base_0)
@@ -187,6 +186,7 @@ describe("bitser", function()
 			_base_0.__class = _class_0
 			Horse = _class_0
 		end
+		assert.are.same(Horse.__name, "Horse") -- to shut coveralls up
 		bitser.registerClass(Horse)
 		local bojack = Horse('Bojack Horseman')
 		test_serdeser(bojack)
