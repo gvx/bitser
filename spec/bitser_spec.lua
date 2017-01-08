@@ -163,6 +163,43 @@ describe("bitser", function()
 		assert.is_true(class.isinstance(serdeser(bojack), Horse))
 		bitser.unregisterClass('Horse')
 	end)
+	it("serializes Moonscript class instances", function()
+		local TestClass
+		do
+			local _class_0
+			local _base_0 = {
+				u = function(self)
+					self.__class.o = self.__class.o + 1
+				end,
+				i = function(self)
+					self.b = self.b + 5
+				end
+			}
+			_base_0.__index = _base_0
+			_class_0 = setmetatable({
+				__init = function(self, b)
+					self.b = b
+				end,
+				__base = _base_0,
+				__name = "TestClass"
+			}, {
+				__index = _base_0,
+				__call = function(cls, ...)
+					local _self_0 = setmetatable({}, _base_0)
+					cls.__init(_self_0, ...)
+						return _self_0
+					end
+				})
+			_base_0.__class = _class_0
+			local self = _class_0
+			self.o = 0
+			TestClass = _class_0
+		end
+		local instance = TestClass(19)
+		test_serdeser(instance)
+		assert.is_true(serdeser(instance).__class == TestClass)
+		bitser.unregisterClass('TestClass')
+	end)
 	it("serializes custom class instances", function()
 		local Horse_mt = bitser.registerClass('Horse', {__index = {}}, nil, setmetatable)
 		local function Horse(name)
