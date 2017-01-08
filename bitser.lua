@@ -176,8 +176,8 @@ local function write_table(value, seen)
 	local classname = (class_name_registry[value.class] -- MiddleClass
 		or class_name_registry[value.__baseclass] -- SECL
 		or class_name_registry[getmetatable(value)] -- hump.class
-		or class_name_registry[value.__class__]) -- Slither
-		or class_name_registry[value.__class] -- Moonscript class
+		or class_name_registry[value.__class__] -- Slither
+		or class_name_registry[value.__class]) -- Moonscript class
 	if classname then
 		classkey = classkey_registry[classname]
 		Buffer_write_byte(242)
