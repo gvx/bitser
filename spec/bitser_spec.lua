@@ -195,6 +195,7 @@ describe("bitser", function()
 			self.o = 0
 			TestClass = _class_0
 		end
+		bitser.registerClass(TestClass)
 		local instance = TestClass(19)
 		test_serdeser(instance)
 		assert.are.equal(serdeser(instance).__class, TestClass)
