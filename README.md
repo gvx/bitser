@@ -17,6 +17,8 @@ serializedData = love.filesystem.newFileData("filename")
 someValue = bitser.loadData(serializedData:getPointer(), serializedData:getSize())
 ```
 
+Documentation can be found in [USAGE.md](USAGE.md).
+
 Pull requests, bug reports and other feedback welcome! :heart:
 
 Bitser is released under the ISC license (functionally equivalent to the BSD
