@@ -129,6 +129,14 @@ value = bitser.loadData(light_userdata, size)
 
 Deserializes `value` from raw data. You probably won't need to use this function ever.
 
+When running [LÖVE](https://love2d.org/), you would use it like this:
+
+```lua
+value = bitser.loadData(data:getPointer(), data:getSize())
+```
+
+Where `data` is an instance of a subclass of [Data](https://love2d.org/wiki/Data).
+
 ## loadLoveFile
 
 ```lua
