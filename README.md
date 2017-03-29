@@ -22,6 +22,8 @@ Pull requests, bug reports and other feedback welcome! :heart:
 Bitser is released under the ISC license (functionally equivalent to the BSD
 2-Clause and MIT licenses).
 
+Please note that bitser requires LuaJIT for its `ffi` library and JIT compilation. Without JIT, it may or may not run, but it will be much slower than usual. This primarily affects Android and iOS, because JIT is disabled on those platforms.
+
 ## Why would I use this?
 
 Because it's fast. Because it produces tiny output. Because the name means "snappier"
