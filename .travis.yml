@@ -19,7 +19,7 @@ install:
   - wget https://raw.githubusercontent.com/vrld/hump/038bc9025f1cb850355f4b073357b087b8122da9/class.lua
 
 script:
-  - luacheck --std max+busted bitser.lua spec --globals love
+  - luacheck --std max+busted bitser.lua spec --globals love --no-max-line-length
   - busted --verbose --coverage
 
 after_success:
