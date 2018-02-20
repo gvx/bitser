@@ -10,6 +10,7 @@ _G.love = {filesystem = {newFileData = function()
 	end}
 end, write = function(_, s)
 	love.s = s
+	return true
 end}}
 
 local bitser = require 'bitser'
