@@ -27,6 +27,7 @@ local buf_size = -1
 local buf = nil
 local writable_buf = nil
 local writable_buf_size = nil
+local SEEN_LEN = {}
 
 local function Buffer_prereserve(min_size)
 	if buf_size < min_size then
@@ -222,8 +223,8 @@ serialize_value = function(value, seen)
 	end
 	local t = type(value)
 	if t ~= 'number' and t ~= 'boolean' and t ~= 'nil' then
-		seen[value] = seen.len
-		seen.len = seen.len + 1
+		seen[value] = seen[SEEN_LEN]
+		seen[SEEN_LEN] = seen[SEEN_LEN] + 1
 	end
 	if resource_name_registry[value] then
 		local name = resource_name_registry[value]
@@ -245,7 +246,7 @@ end
 
 local function serialize(value)
 	Buffer_makeBuffer(4096)
-	local seen = {len = 0}
+	local seen = {[SEEN_LEN] = 0}
 	serialize_value(value, seen)
 end
 
