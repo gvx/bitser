@@ -370,7 +370,10 @@ end, loadLoveFile = function(fname)
 	local serializedData, error = love.filesystem.newFileData(fname)
 	assert(serializedData, error)
 	Buffer_newDataReader(serializedData:getPointer(), serializedData:getSize())
-	return deserialize_value({})
+	local value = deserialize_value({})
+	-- serializedData needs to not be collected early in a tail-call
+	-- so make sure deserialize_value returns before loadLoveFile does
+	return value
 end, loadData = function(data, size)
 	Buffer_newDataReader(data, size)
 	return deserialize_value({})
