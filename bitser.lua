@@ -375,9 +375,15 @@ end, loadLoveFile = function(fname)
 	-- so make sure deserialize_value returns before loadLoveFile does
 	return value
 end, loadData = function(data, size)
+	if size == 0 then
+		error('cannot load value from empty data')
+	end
 	Buffer_newDataReader(data, size)
 	return deserialize_value({})
 end, loads = function(str)
+	if #str == 0 then
+		error('cannot load value from empty string')
+	end
 	Buffer_newReader(str)
 	return deserialize_value({})
 end, register = function(name, resource)
