@@ -23,6 +23,10 @@ local function test_serdeser(value)
 	assert.are.same(serdeser(value), value)
 end
 
+local function test_serdeser_idempotent(value)
+	assert.are.same(bitser.dumps(serdeser(value)), bitser.dumps(value))
+end
+
 describe("bitser", function()
 	it("serializes simple values", function()
 		test_serdeser(true)
@@ -311,7 +315,7 @@ describe("bitser", function()
 		]])
 		local value = ffi.new('struct some_struct', 42, 1.25)
 		bitser.register('struct_type', ffi.typeof(value))
-		test_serdeser(value)
+		test_serdeser_idempotent(value)
 		bitser.unregister('struct_type')
 	end)
 	it("can read and write cdata without registering its ctype", function()
@@ -322,7 +326,7 @@ describe("bitser", function()
 			};
 		]])
 		local value = ffi.new('struct some_struct', 42, 1.25)
-		test_serdeser(value)
+		test_serdeser_idempotent(value)
 	end)
 	it("cannot read from anonymous structs", function()
 		local v = bitser.dumps(ffi.new('struct { int a; }'))
