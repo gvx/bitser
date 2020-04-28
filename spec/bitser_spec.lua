@@ -299,22 +299,25 @@ describe("bitser", function()
 		bitser.dumpLoveFile("some_file_name", v)
 		assert.are.same(v, bitser.loadLoveFile("some_file_name"))
 	end)
-	it("can read and write cdata", function()
-		-- a simple value
+	it("can read and write simple cdata", function()
 		test_serdeser(ffi.new('double', 42.5))
+	end)
+	before = function ()
 		ffi.cdef[[
-		struct some_struct {
-			int a;
-			double b;
-		};
+			struct some_struct {
+				int a;
+				double b;
+			};
 		]]
+	end
+	it("can read and write cdata with a registered ctype", function()
 		local value = ffi.new('struct some_struct', 42, 1.25)
-		local type_of_struct = ffi.typeof(value)
-		-- with a registered type
-		bitser.register('struct_type', type_of_struct)
+		bitser.register('struct_type', ffi.typeof(value))
 		test_serdeser(value)
 		bitser.unregister('struct_type')
-		-- with an unregistered type
+	end)
+	it("can read and write cdata without registering its ctype", function()
+		local value = ffi.new('struct some_struct', 42, 1.25)
 		test_serdeser(value)
 	end)
 	it("cannot read from anonymous structs", function()
