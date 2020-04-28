@@ -12,12 +12,9 @@ struct nested_struct {
 };
 ]]
 
-local bitser = require 'bitser'
-
 local int_data = ffi.new('int', 5)
 
 local struct_data = ffi.new('struct nested_struct', {10, {20, 30}})
 
-local value = ffi.new('struct { int a; double b; }', 42, 1.25)
 
-return {int_data, struct_data, value}, 1000, 3
+return {int_data, struct_data, {ffi.new("int",1),5,ffi.new("int",67)}}, 1000, 3

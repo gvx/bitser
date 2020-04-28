@@ -242,7 +242,7 @@ serialize_value = function(value, seen)
 		return
 	end
 	local t = type(value)
-	if t ~= 'number' and t ~= 'boolean' and t ~= 'nil' then
+	if t ~= 'number' and t ~= 'boolean' and t ~= 'nil' and t ~= 'cdata' then
 		seen[value] = seen[SEEN_LEN]
 		seen[SEEN_LEN] = seen[SEEN_LEN] + 1
 	end
