@@ -302,7 +302,13 @@ describe("bitser", function()
 	it("can read and write cdata", function()
 		-- a simple value
 		test_serdeser(ffi.new('double', 42.5))
-		local value = ffi.new('struct some_struct { int a; double b; }', 42, 1.25)
+		ffi.cdef[[
+		struct some_struct {
+			int a;
+			double b;
+		};
+		]]
+		local value = ffi.new('struct some_struct', 42, 1.25)
 		local type_of_struct = ffi.typeof(value)
 		-- with a registered type
 		bitser.register('struct_type', type_of_struct)
