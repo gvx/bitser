@@ -302,21 +302,25 @@ describe("bitser", function()
 	it("can read and write simple cdata", function()
 		test_serdeser(ffi.new('double', 42.5))
 	end)
-	before = function ()
-		ffi.cdef[[
+	it("can read and write cdata with a registered ctype", function()
+		pcall(ffi.cdef,[[
 			struct some_struct {
 				int a;
 				double b;
 			};
-		]]
-	end
-	it("can read and write cdata with a registered ctype", function()
+		]])
 		local value = ffi.new('struct some_struct', 42, 1.25)
 		bitser.register('struct_type', ffi.typeof(value))
 		test_serdeser(value)
 		bitser.unregister('struct_type')
 	end)
 	it("can read and write cdata without registering its ctype", function()
+		pcall(ffi.cdef,[[
+			struct some_struct {
+				int a;
+				double b;
+			};
+		]])
 		local value = ffi.new('struct some_struct', 42, 1.25)
 		test_serdeser(value)
 	end)
