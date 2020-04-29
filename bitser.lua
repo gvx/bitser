@@ -14,6 +14,8 @@ ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
 OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 ]]
 
+local VERSION = '1.1'
+
 local floor = math.floor
 local pairs = pairs
 local type = type
@@ -469,4 +471,4 @@ end, unregisterClass = function(name)
 	classkey_registry[name] = nil
 	class_deserialize_registry[name] = nil
 	class_registry[name] = nil
-end, reserveBuffer = Buffer_prereserve, clearBuffer = Buffer_clear}
+end, reserveBuffer = Buffer_prereserve, clearBuffer = Buffer_clear, version = VERSION}

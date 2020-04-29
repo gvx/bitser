@@ -155,7 +155,7 @@ resource = bitser.register(name, resource)
 ```
 
 Registers the value `resource` with the name `name`, which has to be a unique string. Registering static resources like images,
-functions, classes and huge strings, makes sure bitser doesn't attempt to serialize them, but only stores a named
+functions, classes, huge strings and LuaJIT ctypes, makes sure bitser doesn't attempt to serialize them, but only stores a named
 reference to them.
 
 Returns the registered resource as a convenience.
@@ -189,7 +189,7 @@ If not nil, the argument `classkey` should be a string such that
 If not nil, the argument `deserializer` should be a function such that `deserializer(obj, class)` returns a valid
 instance of `class` with the properties of `obj`. `deserializer` is allowed to mutate `obj`.
 
-Returns the registered resource as a convenience.
+Returns the registered class as a convenience.
 
 See also: [`bitser.unregisterClass`](#unregisterclass).
 
