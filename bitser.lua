@@ -27,6 +27,7 @@ local ffi = require("ffi")
 local buf_pos = 0
 local buf_size = -1
 local buf = nil
+local buf_is_writable = true
 local writable_buf = nil
 local writable_buf_size = nil
 local SEEN_LEN = {}
@@ -35,22 +36,25 @@ local function Buffer_prereserve(min_size)
 	if buf_size < min_size then
 		buf_size = min_size
 		buf = ffi.new("uint8_t[?]", buf_size)
+		buf_is_writable = true
 	end
 end
 
 local function Buffer_clear()
 	buf_size = -1
 	buf = nil
+	buf_is_writable = true
 	writable_buf = nil
 	writable_buf_size = nil
 end
 
 local function Buffer_makeBuffer(size)
-	if writable_buf then
+	if not buf_is_writable then
 		buf = writable_buf
 		buf_size = writable_buf_size
 		writable_buf = nil
 		writable_buf_size = nil
+		buf_is_writable = true
 	end
 	buf_pos = 0
 	Buffer_prereserve(size)
@@ -62,8 +66,11 @@ local function Buffer_newReader(str)
 end
 
 local function Buffer_newDataReader(data, size)
-	writable_buf = buf
-	writable_buf_size = buf_size
+	if buf_is_writable then
+		writable_buf = buf
+		writable_buf_size = buf_size
+	end
+	buf_is_writable = false
 	buf_pos = 0
 	buf_size = size
 	buf = ffi.cast("uint8_t*", data)
@@ -74,6 +81,7 @@ local function Buffer_reserve(additional_size)
 		buf_size = buf_size * 2
 		local oldbuf = buf
 		buf = ffi.new("uint8_t[?]", buf_size)
+		buf_is_writable = true
 		ffi.copy(buf, oldbuf, buf_pos)
 	end
 end
