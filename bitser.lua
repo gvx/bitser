@@ -188,15 +188,18 @@ end
 
 local function write_table(value, seen)
 	local classkey
+	local metatable = getmetatable(value)
 	local classname = (class_name_registry[value.class] -- MiddleClass
 		or class_name_registry[value.__baseclass] -- SECL
-		or class_name_registry[getmetatable(value)] -- hump.class
+		or class_name_registry[metatable] -- hump.class
 		or class_name_registry[value.__class__] -- Slither
 		or class_name_registry[value.__class]) -- Moonscript class
 	if classname then
 		classkey = classkey_registry[classname]
 		Buffer_write_byte(242)
 		serialize_value(classname, seen)
+	elseif metatable then
+		Buffer_write_byte(253)
 	else
 		Buffer_write_byte(240)
 	end
@@ -217,6 +220,9 @@ local function write_table(value, seen)
 			serialize_value(k, seen)
 			serialize_value(v, seen)
 		end
+	end
+	if metatable then
+		serialize_value(metatable, seen)
 	end
 end
 
@@ -304,7 +310,7 @@ local function deserialize_value(seen)
 	elseif t < 240 then
 		--small resource
 		return add_to_seen(resource_registry[Buffer_read_string(t - 224)], seen)
-	elseif t == 240 then
+	elseif t == 240 or t == 253 then
 		--table
 		local v = add_to_seen({}, seen)
 		local len = deserialize_value(seen)
@@ -315,6 +321,9 @@ local function deserialize_value(seen)
 		for _ = 1, len do
 			local key = deserialize_value(seen)
 			v[key] = deserialize_value(seen)
+		end
+		if t == 253 then
+			setmetatable(v, deserialize_value(seen))
 		end
 		return v
 	elseif t == 241 then
