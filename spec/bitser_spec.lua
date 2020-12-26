@@ -156,7 +156,7 @@ describe("bitser", function()
 	end)
 	it("serializes Slither instances", function()
 		local class = require("slither")
-		local Horse = class.private 'Horse' {
+		local Horse = class 'Horse' {
 			__attributes__ = {bitser.registerClass},
 			__init__ = function(self, name)
 				self.name = name
