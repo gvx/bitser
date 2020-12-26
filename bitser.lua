@@ -221,7 +221,7 @@ local function write_table(value, seen)
 			serialize_value(v, seen)
 		end
 	end
-	if metatable then
+	if metatable and not classname then
 		serialize_value(metatable, seen)
 	end
 end
