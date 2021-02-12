@@ -10,8 +10,10 @@
     * [`bitser.includeMetatables`](#includeMetatables)
     * [`bitser.register`](#register)
     * [`bitser.registerClass`](#registerclass)
+    * [`bitser.registerUserdata`](#registerUserdata)
     * [`bitser.unregister`](#unregister)
     * [`bitser.unregisterClass`](#unregisterclass)
+    * [`bitser.unregisterUserdata`](#unregisterUserdata)
     * [`bitser.reserveBuffer`](#reservebuffer)
     * [`bitser.clearBuffer`](#clearbuffer)
 
@@ -202,6 +204,55 @@ Returns the registered class as a convenience.
 
 See also: [`bitser.unregisterClass`](#unregisterclass).
 
+## registerUserdata
+
+```lua
+bitser.registerUserdata(id, matcher, serializer, deserializer)
+```
+
+This is an advanved-users-only feature, allowing you to register a custom userdata handler.
+This makes it possible for bitser to serialize and deserialize userdata with your own callbacks.
+
+- The `id` parameter has to be a number from 0 to 255 and unique, and identifies your userdata handler.
+It must be unique per userdata "type".
+
+- The `matcher` function takes the userdata value as parameter, and must return a boolean: whether the
+current userdata value is (matches) the one you registered the handler for. This could be done via metatable
+lookup, for instance, or any other way that your userdata provides.
+
+- The `serializer` function takes the value (your userdata) and an `env` table as parameters.
+  The `env` table provides access to common internal functions useful for (de)serializing, and the `seen` data.
+
+- The `deserializer` function takes an `env` table as parameter.
+  The `env` table provides access to common internal functions useful for (de)serializing, and the `seen` data.
+
+Full usage example with a `ByteArray` class as userdata, which under the hood, stores bytes sequentially:  
+(The internal format would be `[len][data...]`)
+```lua
+bitser.registerUserdata(1,
+  function(value)
+    return getmetatable(value) == ByteArray
+  end,
+  function(value, env)
+    local len = #value
+    env.serialize_value(len, env.seen)
+    env.Buffer_write_raw(ffi.string(ffi.cast("uint8_t*", value:getDataPtr()), len), len)
+  end,
+  function(env)
+    local len = env.deserialize_value(env.seen)
+    local ba = ByteArray(len)
+    env.Buffer_read_raw(ffi.cast("uint8_t*", ba:getDataPtr()), len)
+    return ba
+end)
+
+local test = ByteArray({ 0x01, 0x02, 0x00, 0x04 })
+local test2 = bitser.loads(bitser.dumps(test))
+
+print(test:tostring("base64") == test2:tostring("base64")) -- true
+```
+
+See also: [`bitser.unregisterUserdata`](#unregisterUserdata).
+
 ## unregister
 
 ```lua
@@ -222,6 +273,16 @@ Deregisters the previously registered class with the name `name`. Note that this
 which is useful in a context where you don't have a reference to the class you want to unregister.
 
 See also: [`bitser.registerClass`](#registerclass).
+
+## unregisterUserdata
+
+```lua
+bitser.unregisterUserdata(id)
+```
+
+Deregisters the previously registered userdata with the id `id`.
+
+See also: [`bitser.registerUserdata`](#registerUserdata).
 
 ## reserveBuffer
 
