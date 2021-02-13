@@ -7,6 +7,7 @@
     * [`bitser.loads`](#loads)
     * [`bitser.loadData`](#loaddata)
     * [`bitser.loadLoveFile`](#loadlovefile)
+    * [`bitser.includeMetatables`](#includeMetatables)
     * [`bitser.register`](#register)
     * [`bitser.registerClass`](#registerclass)
     * [`bitser.unregister`](#unregister)
@@ -147,6 +148,14 @@ Reads from `file_name` and deserializes `value` more efficiently than reading th
 Only useful if you're running [LÖVE](https://love2d.org/).
 
 See also: [`bitser.dumpLoveFile`](#dumplovefile).
+
+## includeMetatables
+
+Controls whether bitser will (de)serialize metatables. true by default.
+
+```lua
+bitser.includeMetatables(bool)
+```
 
 ## register
 
