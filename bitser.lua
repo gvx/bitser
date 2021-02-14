@@ -30,6 +30,7 @@ local buf = nil
 local buf_is_writable = true
 local writable_buf = nil
 local writable_buf_size = nil
+local includeMetatables = true -- togglable with bitser.includeMetatables(false)
 local SEEN_LEN = {}
 
 local function Buffer_prereserve(min_size)
@@ -198,7 +199,7 @@ local function write_table(value, seen)
 		classkey = classkey_registry[classname]
 		Buffer_write_byte(242)
 		serialize_value(classname, seen)
-	elseif metatable then
+	elseif includeMetatables and metatable then
 		Buffer_write_byte(253)
 	else
 		Buffer_write_byte(240)
@@ -221,7 +222,7 @@ local function write_table(value, seen)
 			serialize_value(v, seen)
 		end
 	end
-	if metatable and not classname then
+	if includeMetatables and metatable and not classname then
 		serialize_value(metatable, seen)
 	end
 end
@@ -323,7 +324,9 @@ local function deserialize_value(seen)
 			v[key] = deserialize_value(seen)
 		end
 		if t == 253 then
-			setmetatable(v, deserialize_value(seen))
+			if includeMetatables then
+				setmetatable(v, deserialize_value(seen))
+			end
 		end
 		return v
 	elseif t == 241 then
@@ -434,6 +437,8 @@ end, loads = function(str)
 	end
 	Buffer_newReader(str)
 	return deserialize_value({})
+end, includeMetatables = function(bool)
+	includeMetatables = not not bool
 end, register = function(name, resource)
 	assert(not resource_registry[name], name .. " already registered")
 	resource_registry[name] = resource
