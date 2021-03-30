@@ -143,6 +143,12 @@ local class_registry = {}
 local class_name_registry = {}
 local classkey_registry = {}
 local class_deserialize_registry = {}
+local extension_registry = {}
+local extensions_by_type = {}
+local EXTENSION_TYPE_KEY = 'bitser-type'
+local EXTENSION_MATCH_KEY = 'bitser-match'
+local EXTENSION_LOAD_KEY = 'bitser-load'
+local EXTENSION_DUMP_KEY = 'bitser-dump'
 
 local serialize_value
 
@@ -276,6 +282,17 @@ serialize_value = function(value, seen)
 		end
 		return
 	end
+	if not disable_extensions and extensions_by_type[t] then
+		for extension_id, extension in pairs(extensions_by_type[t]) do
+			if extension[EXTENSION_MATCH_KEY](value) then
+				-- extension
+				Buffer_write_byte(254)
+				serialize_value(extension_id, seen)
+				serialize_value(extension[EXTENSION_DUMP_KEY](value), seen)
+				return
+			end
+		end
+	end
 	(types[t] or
 		error("cannot serialize type " .. t)
 		)(value, seen)
@@ -388,6 +405,10 @@ local function deserialize_value(seen)
 		local read_into = ffi.typeof('$[1]', ctype)()
 		Buffer_read_raw(read_into, len)
 		return ctype(read_into[0])
+	elseif t == 254 then
+		--extension
+		local extension_id = deserialize_value(seen)
+		return extension_registry[extension_id][EXTENSION_LOAD_KEY](deserialize_value(seen))
 	else
 		error("unsupported serialized type " .. t)
 	end
@@ -493,4 +514,16 @@ end, unregisterClass = function(name)
 	classkey_registry[name] = nil
 	class_deserialize_registry[name] = nil
 	class_registry[name] = nil
+end, registerExtension = function(extension_id, extension)
+	assert(not extension_registry[extension_id], 'extension with id ' .. extension_id .. ' already registered')
+	local ty = extension[EXTENSION_TYPE_KEY]
+	assert(type(ty) == 'string' and type(extension[EXTENSION_MATCH_KEY]) == 'function' and type(extension[EXTENSION_LOAD_KEY]) == 'function' and type(extension[EXTENSION_DUMP_KEY]) == 'function', 'not a valid extension')
+	extension_registry[extension_id] = extension
+	if not extensions_by_type[ty] then
+		extensions_by_type[ty] = {}
+	end
+	extensions_by_type[ty][extension_id] = extension
+end, unregisterExtension = function(extension_id)
+	extensions_by_type[extension_registry[extension_id][EXTENSION_TYPE_KEY]][extension_id] = nil
+	extension_registry[extension_id] = nil
 end, reserveBuffer = Buffer_prereserve, clearBuffer = Buffer_clear, version = VERSION}
