@@ -282,7 +282,7 @@ serialize_value = function(value, seen)
 		end
 		return
 	end
-	if not disable_extensions and extensions_by_type[t] then
+	if extensions_by_type[t] then
 		for extension_id, extension in pairs(extensions_by_type[t]) do
 			if extension[EXTENSION_MATCH_KEY](value) then
 				-- extension
