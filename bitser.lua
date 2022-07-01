@@ -32,6 +32,7 @@ local writable_buf = nil
 local writable_buf_size = nil
 local includeMetatables = true -- togglable with bitser.includeMetatables(false)
 local SEEN_LEN = {}
+local shared_env = {} -- for userdata callbacks
 
 local function Buffer_prereserve(min_size)
 	if buf_size < min_size then
@@ -139,6 +140,7 @@ end
 
 local resource_registry = {}
 local resource_name_registry = {}
+local userdata_registry = {}
 local class_registry = {}
 local class_name_registry = {}
 local classkey_registry = {}
@@ -243,7 +245,20 @@ local function write_cdata(value, seen)
 	Buffer_write_raw(ffi.typeof('$[1]', ty)(value), len)
 end
 
-local types = {number = write_number, string = write_string, table = write_table, boolean = write_boolean, ["nil"] = write_nil, cdata = write_cdata}
+local function write_userdata(value, seen)
+	for ud_id, ud_handler in pairs(userdata_registry) do
+		if ud_handler.match(value) then
+			Buffer_write_byte(254)
+			Buffer_write_byte(ud_id)
+			shared_env.seen = seen
+			ud_handler.serialize(value, shared_env)
+			return
+		end
+	end
+	error("cannot serialize this userdata")
+end
+
+local types = {number = write_number, string = write_string, table = write_table, boolean = write_boolean, ["nil"] = write_nil, cdata = write_cdata, userdata = write_userdata}
 
 serialize_value = function(value, seen)
 	if seen[value] then
@@ -259,7 +274,7 @@ serialize_value = function(value, seen)
 		return
 	end
 	local t = type(value)
-	if t ~= 'number' and t ~= 'boolean' and t ~= 'nil' and t ~= 'cdata' then
+	if t ~= 'number' and t ~= 'boolean' and t ~= 'nil' and t ~= 'cdata' and t ~= 'userdata' then
 		seen[value] = seen[SEEN_LEN]
 		seen[SEEN_LEN] = seen[SEEN_LEN] + 1
 	end
@@ -388,10 +403,24 @@ local function deserialize_value(seen)
 		local read_into = ffi.typeof('$[1]', ctype)()
 		Buffer_read_raw(read_into, len)
 		return ctype(read_into[0])
+	elseif t == 254 then
+		--userdata
+		local ud_id = Buffer_read_byte()
+		local ud_handler = userdata_registry[ud_id]
+		if ud_handler then
+			shared_env.seen = seen
+			return ud_handler.deserialize(shared_env)
+		end
+		error("unsupported serialized userdata id " .. ud_id)
 	else
 		error("unsupported serialized type " .. t)
 	end
 end
+
+shared_env.serialize_value = serialize_value
+shared_env.deserialize_value = deserialize_value
+shared_env.Buffer_write_raw = Buffer_write_raw
+shared_env.Buffer_read_raw = Buffer_read_raw
 
 local function deserialize_MiddleClass(instance, class)
 	return setmetatable(instance, class.__instanceDict)
@@ -493,4 +522,10 @@ end, unregisterClass = function(name)
 	classkey_registry[name] = nil
 	class_deserialize_registry[name] = nil
 	class_registry[name] = nil
+end, registerUserdata = function(id, matcher, serializer, deserializer)
+	assert(type(id) == "number" and id >= 0 and id <= 255, "registerUserdata: id must be a number between 0 and 255")
+	assert(not userdata_registry[id], "registerUserdata: id " .. id .. " already registered")
+	userdata_registry[id] = { match = matcher, serialize = serializer, deserialize = deserializer}
+end, unregisterUserdata = function(id)
+	userdata_registry[id] = nil
 end, reserveBuffer = Buffer_prereserve, clearBuffer = Buffer_clear, version = VERSION}
