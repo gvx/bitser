@@ -235,6 +235,17 @@ local function write_cdata(value, seen)
 		serialize_value(tostring(ty):sub(7, -2), seen)
 		return
 	end
+	if tostring(ty):match"%s*%[%?%]" then
+		-- VLA
+		Buffer_write_byte(254)
+		serialize_value(ty, seen)
+		local len = ffi.sizeof(value)
+		write_number(len)
+		local nelem = len/ffi.sizeof(ty,1)
+		write_number(nelem)
+		Buffer_write_raw(ffi.string(value,len), len)
+		return
+	end
 	-- cdata
 	Buffer_write_byte(252)
 	serialize_value(ty, seen)
@@ -388,6 +399,13 @@ local function deserialize_value(seen)
 		local read_into = ffi.typeof('$[1]', ctype)()
 		Buffer_read_raw(read_into, len)
 		return ctype(read_into[0])
+	elseif t == 254 then
+		local ctype = deserialize_value(seen)
+		local len = deserialize_value(seen)
+		local nelem = deserialize_value(seen)
+		local read_into = ffi.typeof(ctype)(nelem)
+		Buffer_read_raw(read_into, len)
+		return read_into
 	else
 		error("unsupported serialized type " .. t)
 	end
