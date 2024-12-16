@@ -229,7 +229,9 @@ end
 
 local function write_cdata(value, seen)
 	local ty = ffi.typeof(value)
-	if ty == value then
+	-- to avoid calling value == ty with cdata with __eq metamethod
+	local success, eq = pcall(function() return value == ty end)
+	if success and eq then
 		-- ctype
 		Buffer_write_byte(251)
 		serialize_value(tostring(ty):sub(7, -2), seen)
