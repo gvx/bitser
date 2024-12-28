@@ -351,7 +351,7 @@ describe("bitser", function()
 	it("is able to deserialize the same instance twice", function()
 		local class = {}
 		local instance = setmetatable({}, class)
-		local deserialize = function(data, class)
+		local deserialize = function(_, _)
 			return instance
 		end
 
