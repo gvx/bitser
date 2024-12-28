@@ -79,7 +79,7 @@ local function Buffer_newDataReader(data, size)
 end
 
 local function Buffer_reserve(additional_size)
-	if buf_pos + additional_size > buf_size do
+	if buf_pos + additional_size > buf_size then
 		repeat
 			buf_size = buf_size * 2
 		until buf_pos + additional_size <= buf_size
