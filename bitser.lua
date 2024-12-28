@@ -78,8 +78,10 @@ local function Buffer_newDataReader(data, size)
 end
 
 local function Buffer_reserve(additional_size)
-	while buf_pos + additional_size > buf_size do
-		buf_size = buf_size * 2
+	if buf_pos + additional_size > buf_size do
+		repeat
+			buf_size = buf_size * 2
+		until buf_pos + additional_size <= buf_size
 		local oldbuf = buf
 		buf = ffi.new("uint8_t[?]", buf_size)
 		buf_is_writable = true
