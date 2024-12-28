@@ -348,4 +348,19 @@ describe("bitser", function()
 		assert.is_nil(serdeser(t).bar)
 		bitser.includeMetatables(true) -- revert back to default for potential other tests
 	end)
+	it("is able to deserialize the same instance twice", function()
+		local class = {}
+		local instance = setmetatable({}, class)
+		local deserialize = function(data, class)
+			return instance
+		end
+
+		bitser.registerClass("class", class, nil, deserialize)
+
+		local loaded_instances = serdeser({instance, instance})
+
+		assert.are.equal(instance, loaded_instances[1], loaded_instances[2])
+
+		bitser.unregisterClass("class")
+	end)
 end)

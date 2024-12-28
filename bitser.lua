@@ -32,6 +32,7 @@ local writable_buf = nil
 local writable_buf_size = nil
 local includeMetatables = true -- togglable with bitser.includeMetatables(false)
 local SEEN_LEN = {}
+local NOT_YET_INITIALIZED = {}
 
 local function Buffer_prereserve(min_size)
 	if buf_size < min_size then
@@ -295,8 +296,16 @@ local function add_to_seen(value, seen)
 end
 
 local function reserve_seen(seen)
-	insert(seen, 42)
+	insert(seen, NOT_YET_INITIALIZED)
 	return #seen
+end
+
+local function get_from_seen(seen, idx)
+	local value = seen[idx]
+	if value == NOT_YET_INITIALIZED then
+		error('trying to deserialize a value that has not yet been initialized')
+	end
+	return value
 end
 
 local function deserialize_value(seen)
@@ -306,7 +315,7 @@ local function deserialize_value(seen)
 		return t - 27
 	elseif t < 192 then
 		--small reference
-		return seen[t - 127]
+		return get_from_seen(seen, t - 127)
 	elseif t < 224 then
 		--small string
 		return add_to_seen(Buffer_read_string(t - 192), seen)
@@ -339,7 +348,8 @@ local function deserialize_value(seen)
 		return value
 	elseif t == 242 then
 		--instance
-		local instance = add_to_seen({}, seen)
+		local instance_idx = reserve_seen(seen)
+		local instance = {}
 		local classname = deserialize_value(seen)
 		local class = class_registry[classname]
 		local classkey = classkey_registry[classname]
@@ -356,10 +366,12 @@ local function deserialize_value(seen)
 		if classkey then
 			instance[classkey] = class
 		end
-		return deserializer(instance, class)
+		instance = deserializer(instance, class)
+		seen[instance_idx] = instance
+		return instance
 	elseif t == 243 then
 		--reference
-		return seen[deserialize_value(seen) + 1]
+		return get_from_seen(seen, deserialize_value(seen) + 1)
 	elseif t == 244 then
 		--long string
 		return add_to_seen(Buffer_read_string(deserialize_value(seen)), seen)
