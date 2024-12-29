@@ -398,6 +398,10 @@ local function deserialize_value(seen)
 		--extension
 		local extension_id = deserialize_value(seen)
 		return extension_registry[extension_id][EXTENSION_LOAD_KEY](deserialize_value(seen))
+	elseif t == 255 then
+		--additional types
+		local type_id = deserialize_value(seen)
+		error("unsupported serialized type 255+" .. type_id)
 	else
 		error("unsupported serialized type " .. t)
 	end
