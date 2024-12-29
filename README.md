@@ -1,8 +1,5 @@
 # bitser
 
-[![Build Status](https://travis-ci.org/gvx/bitser.svg?branch=master)](https://travis-ci.org/gvx/bitser)
-[![Coverage Status](https://coveralls.io/repos/github/gvx/bitser/badge.svg?branch=master)](https://coveralls.io/github/gvx/bitser?branch=master)
-
 Serializes and deserializes Lua values with LuaJIT.
 
 ```lua
@@ -23,6 +20,8 @@ Bitser is released under the ISC license (functionally equivalent to the BSD
 2-Clause and MIT licenses).
 
 Please note that bitser requires LuaJIT for its `ffi` library and JIT compilation. Without JIT, it may or may not run, but it will be much slower than usual. This primarily affects Android and iOS, because JIT is disabled on those platforms.
+
+:warning: bitser is not endian-safe. If you intend to share serialized data across computers, please make sure they share endianness making sure [`ffi.abi 'le'`](https://luajit.org/ext_ffi_api.html#ffi_abi) has the same value on both the sending and receiving machine, or use another serialization library.
 
 ## Why would I use this?
 
