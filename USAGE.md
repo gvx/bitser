@@ -10,8 +10,10 @@
     * [`bitser.includeMetatables`](#includeMetatables)
     * [`bitser.register`](#register)
     * [`bitser.registerClass`](#registerclass)
+    * [`bitser.registerExtension`](#registerextension)
     * [`bitser.unregister`](#unregister)
     * [`bitser.unregisterClass`](#unregisterclass)
+    * [`bitser.unregisterExtension`](#unregisterextension)
     * [`bitser.reserveBuffer`](#reservebuffer)
     * [`bitser.clearBuffer`](#clearbuffer)
 
@@ -202,6 +204,24 @@ Returns the registered class as a convenience.
 
 See also: [`bitser.unregisterClass`](#unregisterclass).
 
+
+## registerExtension
+
+```lua
+bitser.registerExtension(extension_id, extension)
+```
+
+Registers the extension `extension` and give it the identifier `extension_id`. This is a way to allow 3rd party libraries to
+extend the functionality of bitser, for example to be able to serialize exotic data, or to allow certain optimisations.
+
+To implement your own bitser extensions, see
+[EXTENSION_API.md](EXTENSION_API.md).
+
+The name `extension_id` must not conflict with that of other extensions you're
+using. Strings are recommended, but other primitive types will work.
+
+See also: [`bitser.unregisterExtension`](#unregisterextension).
+
 ## unregister
 
 ```lua
@@ -222,6 +242,16 @@ Deregisters the previously registered class with the name `name`. Note that this
 which is useful in a context where you don't have a reference to the class you want to unregister.
 
 See also: [`bitser.registerClass`](#registerclass).
+
+## unregisterExtension
+
+```lua
+bitser.unregister(extension_id)
+```
+
+Deregisters the previously registered extension with the id `extension_id`.
+
+See also: [`bitser.registerExtension`](#registerextension).
 
 ## reserveBuffer
 

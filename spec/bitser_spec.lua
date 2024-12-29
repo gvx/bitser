@@ -270,7 +270,6 @@ describe("bitser", function()
 		assert.has_error(function() bitser.registerClass('Horse', {mane = 'majestic'}) end, "no deserializer given for unsupported class library")
 	end)
 	it("cannot deserialize values from unassigned type bytes", function()
-		assert.has_error(function() bitser.loads("\254") end, "unsupported serialized type 254")
 		assert.has_error(function() bitser.loads("\255") end, "unsupported serialized type 255")
 	end)
 	it("can load from raw data", function()
@@ -326,5 +325,21 @@ describe("bitser", function()
 		assert.are.equal(instance, loaded_instances[1], loaded_instances[2])
 
 		bitser.unregisterClass("class")
+	end)
+	it("provides a simple extension mechanism", function()
+		local MATCH_CALLS = 0
+		local LOAD_CALLS = 0
+		local DUMP_CALLS = 0
+		bitser.registerExtension('test', {
+			['bitser-type'] = 'number',
+			['bitser-match'] = function(value) MATCH_CALLS = MATCH_CALLS + 1; return value > 0 end,
+			['bitser-load'] = function(value) LOAD_CALLS = LOAD_CALLS + 1; return tonumber(value) end,
+			['bitser-dump'] = function(value) DUMP_CALLS = DUMP_CALLS + 1; return tostring(value) end })
+		local t = {1.0, -1.0, 0., -1/0, 'strings should not match'}
+		test_serdeser(t)
+		assert.are.same(4, MATCH_CALLS)
+		assert.are.same(1, LOAD_CALLS)
+		assert.are.same(1, DUMP_CALLS)
+		bitser.unregisterExtension('test')
 	end)
 end)
