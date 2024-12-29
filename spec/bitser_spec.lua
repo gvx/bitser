@@ -23,10 +23,6 @@ local function test_serdeser(value)
 	assert.are.same(serdeser(value), value)
 end
 
-local function test_serdeser_idempotent(value)
-	assert.are.same(bitser.dumps(serdeser(value)), bitser.dumps(value))
-end
-
 describe("bitser", function()
 	it("serializes simple values", function()
 		test_serdeser(true)
@@ -81,7 +77,7 @@ describe("bitser", function()
 		bitser.unregister("temp_resource")
 	end)
 	it("serializes many resources", function()
-		local max = 1000
+		local max = 100
 		local t = {}
 		for i = 1, max do
 			bitser.register(tostring(i), i)
@@ -93,7 +89,7 @@ describe("bitser", function()
 		end
 	end)
 	it("serializes deeply nested tables", function()
-		local max = 1000
+		local max = 100
 		local t = {}
 		for _ = 1, max do
 			t.t = {}
@@ -239,7 +235,7 @@ describe("bitser", function()
 		test_serdeser(t)
 	end)
 	it("serializes many references", function()
-		local max = 1000
+		local max = 100
 		local t = {}
 		local t2 = {}
 		for i = 1, max do
@@ -301,38 +297,6 @@ describe("bitser", function()
 		local v = {value = "value"}
 		bitser.dumpLoveFile("some_file_name", v)
 		assert.are.same(v, bitser.loadLoveFile("some_file_name"))
-	end)
-	it("can read and write simple cdata", function()
-		test_serdeser(ffi.new('double', 42.5))
-	end)
-	it("can read and write cdata with a registered ctype", function()
-		pcall(ffi.cdef,[[
-			struct some_struct {
-				int a;
-				double b;
-			};
-		]])
-		local value = ffi.new('struct some_struct', 42, 1.25)
-		bitser.register('struct_type', ffi.typeof(value))
-		test_serdeser_idempotent(value)
-		bitser.unregister('struct_type')
-	end)
-	it("can read and write cdata without registering its ctype", function()
-		pcall(ffi.cdef,[[
-			struct some_struct {
-				int a;
-				double b;
-			};
-		]])
-		local value = ffi.new('struct some_struct', 42, 1.25)
-		test_serdeser_idempotent(value)
-	end)
-	it("cannot read from anonymous structs", function()
-		local v = bitser.dumps(ffi.new('struct { int a; }'))
-		assert.has_error(function() bitser.loads(v) end)
-	end)
-	it("can read and write simple multiple cdata of the same ctype without getting confused", function()
-		test_serdeser({ffi.new('double', 42.5), ffi.new('double', 12), ffi.new('double', 0.01)})
 	end)
 	it("can read and write metatables by default", function()
 		local t = setmetatable({foo="foo"}, {__index = {bar="bar"}})

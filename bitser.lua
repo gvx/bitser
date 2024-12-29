@@ -230,23 +230,7 @@ local function write_table(value, seen)
 	end
 end
 
-local function write_cdata(value, seen)
-	local ty = ffi.typeof(value)
-	if ty == value then
-		-- ctype
-		Buffer_write_byte(251)
-		serialize_value(tostring(ty):sub(7, -2), seen)
-		return
-	end
-	-- cdata
-	Buffer_write_byte(252)
-	serialize_value(ty, seen)
-	local len = ffi.sizeof(value)
-	write_number(len)
-	Buffer_write_raw(ffi.typeof('$[1]', ty)(value), len)
-end
-
-local types = {number = write_number, string = write_string, table = write_table, boolean = write_boolean, ["nil"] = write_nil, cdata = write_cdata}
+local types = {number = write_number, string = write_string, table = write_table, boolean = write_boolean, ["nil"] = write_nil}
 
 serialize_value = function(value, seen)
 	if seen[value] then
@@ -393,15 +377,6 @@ local function deserialize_value(seen)
 	elseif t == 250 then
 		--short int
 		return Buffer_read_data("int16_t[1]", 2)[0]
-	elseif t == 251 then
-		--ctype
-		return ffi.typeof(deserialize_value(seen))
-	elseif t == 252 then
-		local ctype = deserialize_value(seen)
-		local len = deserialize_value(seen)
-		local read_into = ffi.typeof('$[1]', ctype)()
-		Buffer_read_raw(read_into, len)
-		return ctype(read_into[0])
 	else
 		error("unsupported serialized type " .. t)
 	end
