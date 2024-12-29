@@ -48,5 +48,5 @@ send me a pull request!
 
 ## You can register classes?
 
-Yes. At the moment, bitser supports MiddleClass, SECL, hump.class, Slither and Moonscript classes (and
+Yes. At the moment, bitser supports classes created using MiddleClass, SECL, hump.class, Slither, Moonscript and Classic (and
 probably some other class libraries by accident).

@@ -71,6 +71,7 @@ See the reference sections on [`bitser.registerClass`](#registerclass) and
 * hump.class
 * Slither
 * Moonscript classes
+* Classic
 
 # Advanced usage
 
