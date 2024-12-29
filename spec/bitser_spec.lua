@@ -328,6 +328,21 @@ describe("bitser", function()
 
 		bitser.unregisterClass("class")
 	end)
+	it("cannot deserialize an instance nested within itself", function()
+		local class = {}
+		local instance = setmetatable({}, class)
+		local deserialize = function(_, _)
+			return instance
+		end
+
+		instance.myself = {instance}
+
+		bitser.registerClass("class", class, nil, deserialize)
+
+		assert.has_error(function() serdeser(instance) end, "trying to deserialize a value that has not yet been initialized")
+
+		bitser.unregisterClass("class")
+	end)
 	it("provides a simple extension mechanism", function()
 		local MATCH_CALLS = 0
 		local LOAD_CALLS = 0
