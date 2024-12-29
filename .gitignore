@@ -1,6 +1,14 @@
-
+# alternative serialization libraries, for benchmarks
 binser.lua
 MessagePack.lua
 serpent.lua
 ser.lua
 smallfolk.lua
+
+# artifacts for testing and coverage
+lua_install
+luacov.*.out
+
+# optional class libraries, used for testing
+class.lua
+slither.lua
