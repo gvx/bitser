@@ -12,3 +12,4 @@ luacov.*.out
 # optional class libraries, used for testing
 class.lua
 slither.lua
+classic.lua

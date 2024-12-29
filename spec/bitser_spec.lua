@@ -195,6 +195,18 @@ describe("bitser", function()
 		assert.are.equal(new_bojack.__class, Horse)
 		bitser.unregisterClass('Horse')
 	end)
+	it("serializes Classic instances", function()
+		local Object = require("classic")
+		local Horse = bitser.registerClass('Horse', Object:extend())
+		function Horse:new(name)
+			self.name = name
+			self[1] = 'instance can be sequence'
+		end
+		local bojack = Horse('Bojack Horseman')
+		test_serdeser(bojack)
+		assert.are.equal(getmetatable(serdeser(bojack)), Horse)
+		bitser.unregisterClass('Horse')
+	end)
 	it("serializes custom class instances", function()
 		local Horse_mt = bitser.registerClass('Horse', {__index = {}}, nil, setmetatable)
 		local function Horse(name)
