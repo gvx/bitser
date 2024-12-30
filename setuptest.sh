@@ -1,5 +1,5 @@
 python3 -m pip install hererocks
-python3 -m hererocks lua_install -r^ --luajit=2.0
+python3 -m hererocks lua_install -r^ --luajit=2.1
 export PATH=$PATH:$PWD/lua_install/bin
 luarocks install luacheck 
 luarocks install busted
