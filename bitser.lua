@@ -1,5 +1,5 @@
 --[[
-Copyright (c) 2020, Jasmijn Wellner
+Copyright (c) 2020-2024, Jasmijn Wellner
 
 Permission to use, copy, modify, and/or distribute this software for any
 purpose with or without fee is hereby granted, provided that the above
@@ -14,7 +14,7 @@ ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
 OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 ]]
 
-local VERSION = '1.1'
+local VERSION = '1.2'
 
 local floor = math.floor
 local pairs = pairs
