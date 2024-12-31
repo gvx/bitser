@@ -328,30 +328,29 @@ describe("bitser", function()
 	it("is able to deserialize the same instance twice", function()
 		local class = {}
 		local instance = setmetatable({}, class)
-		local deserialize = function(_, _)
-			return instance
-		end
+		local deserialize = setmetatable
 
 		bitser.registerClass("class", class, nil, deserialize)
 
 		local loaded_instances = serdeser({instance, instance})
 
-		assert.are.equal(instance, loaded_instances[1], loaded_instances[2])
+		assert.are.equal(loaded_instances[1], loaded_instances[2])
+		assert.are.same(instance, loaded_instances[1])
 
 		bitser.unregisterClass("class")
 	end)
-	it("cannot deserialize an instance nested within itself", function()
+	it("is able to deserialize an instance nested within itself", function()
 		local class = {}
 		local instance = setmetatable({}, class)
-		local deserialize = function(_, _)
-			return instance
-		end
+		local deserialize = setmetatable
 
 		instance.myself = {instance}
 
 		bitser.registerClass("class", class, nil, deserialize)
 
-		assert.has_error(function() serdeser(instance) end, "trying to deserialize a value that has not yet been initialized")
+		local loaded_instance = serdeser(instance)
+		assert.are.equal(loaded_instance, loaded_instance.myself[1])
+		assert.are.same(instance, loaded_instance)
 
 		bitser.unregisterClass("class")
 	end)

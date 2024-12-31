@@ -349,8 +349,7 @@ local function deserialize_value(seen)
 		return value
 	elseif t == 242 then
 		--instance
-		local instance_idx = reserve_seen(seen)
-		local instance = {}
+		local instance = add_to_seen({}, seen)
 		local classname = deserialize_value(seen)
 		local class = class_registry[classname]
 		local classkey = classkey_registry[classname]
@@ -367,8 +366,7 @@ local function deserialize_value(seen)
 		if classkey then
 			instance[classkey] = class
 		end
-		instance = deserializer(instance, class)
-		seen[instance_idx] = instance
+		deserializer(instance, class)
 		return instance
 	elseif t == 243 then
 		--reference

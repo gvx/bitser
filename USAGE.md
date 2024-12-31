@@ -198,8 +198,7 @@ to patch bitser. [See the list of supported class libraries](#supported-class-li
 If not nil, the argument `classkey` should be a string such that
 `rawget(obj, classkey) == class` for any `obj` whose type is `class`. This is done so that key is skipped for serialization.
 
-If not nil, the argument `deserializer` should be a function such that `deserializer(obj, class)` returns a valid
-instance of `class` with the properties of `obj`. `deserializer` is allowed to mutate `obj`.
+If not nil, the argument `deserializer` should be a function such that `deserializer(obj, class)` mutates `obj` in a way that makes it a valid instance of `class`.
 
 Returns the registered class as a convenience.
 
