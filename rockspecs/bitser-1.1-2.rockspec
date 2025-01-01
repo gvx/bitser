@@ -1,7 +1,7 @@
 package = "bitser"
-version = "1.1-1"
+version = "1.1-2"
 source = {
-   url = "https://github.com/gvx/bitser.git",
+   url = "git+https://github.com/gvx/bitser.git",
    tag = "v1.1"
 }
 description = {
@@ -16,7 +16,7 @@ description = {
    license = "ISC"
 }
 dependencies = {
-   "luajit <= 2.1"
+   -- "luajit <= 2.1"
 }
 build = {
    type = "builtin",

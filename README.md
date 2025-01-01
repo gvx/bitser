@@ -2,6 +2,10 @@
 
 Serializes and deserializes Lua values with LuaJIT.
 
+```bash
+luarocks install --server=https://luarocks.org/manifests/gvx bitser
+```
+
 ```lua
 local bitser = require 'bitser'
 

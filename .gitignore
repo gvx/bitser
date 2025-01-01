@@ -13,3 +13,7 @@ luacov.*.out
 class.lua
 slither.lua
 classic.lua
+
+# luarocks build artifacs
+lua_install
+*.rock
