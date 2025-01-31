@@ -4,6 +4,7 @@ local found_ser, ser = pcall(require, 'ser')
 local found_serpent, serpent = pcall(require, 'serpent')
 local found_smallfolk, smallfolk = pcall(require, 'smallfolk')
 local found_msgpack, msgpack = pcall(require, 'MessagePack')
+local found_ldump, ldump = pcall(require, 'ldump')
 
 local cases
 local selected_case = 1
@@ -24,7 +25,7 @@ end
 
 if found_ser then
 	sers.ser = ser
-	desers.ser = loadstring
+	desers.ser = loadstring or load
 end
 
 if found_serpent then
@@ -40,6 +41,11 @@ end
 if found_msgpack then
 	sers.msgpack = msgpack.pack
 	desers.msgpack = msgpack.unpack
+end
+
+if found_ldump then
+	sers.ldump = ldump
+	desers.ldump = function(s) return (loadstring or load)(s)() end
 end
 
 local view_absolute = true

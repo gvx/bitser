@@ -4,6 +4,7 @@ MessagePack.lua
 serpent.lua
 ser.lua
 smallfolk.lua
+ldump.lua
 
 # artifacts for testing and coverage
 lua_install
